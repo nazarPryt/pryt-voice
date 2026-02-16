@@ -1,0 +1,43 @@
+{
+  "name": "pryt-voice",
+  "version": "1.0.0",
+  "description": "Local voice recognition app powered by whisper.cpp",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "package:linux": "electron-vite build && electron-builder --linux"
+  },
+  "dependencies": {
+    "@electron-toolkit/utils": "^4.0.0"
+  },
+  "devDependencies": {
+    "@electron-toolkit/tsconfig": "^1.0.1",
+    "electron": "^35.1.5",
+    "electron-builder": "^26.0.0",
+    "electron-vite": "^3.0.0",
+    "typescript": "^5.8.3"
+  },
+  "build": {
+    "appId": "com.pryt.voice",
+    "productName": "Pryt Voice",
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Utility"
+    },
+    "extraResources": [
+      {
+        "from": "whisper/whisper.cpp/build/bin/whisper-cli",
+        "to": "whisper/whisper-cli"
+      },
+      {
+        "from": "whisper/models/ggml-base.en.bin",
+        "to": "whisper/ggml-base.en.bin"
+      }
+    ]
+  }
+}

@@ -1,0 +1,234 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #1a1a2e;
+  color: #e0e0e0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  user-select: none;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 24px;
+  gap: 16px;
+}
+
+header {
+  text-align: center;
+  flex-shrink: 0;
+}
+
+header h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+
+header h1 span {
+  color: #7c3aed;
+}
+
+.whisper-status {
+  font-size: 0.75rem;
+  margin-top: 6px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  display: inline-block;
+}
+
+.whisper-status.ready {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.whisper-status.error {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.mic-select-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.mic-select-wrapper label {
+  font-size: 0.8rem;
+  color: #999;
+  white-space: nowrap;
+}
+
+.mic-select-wrapper select {
+  flex: 1;
+  background: #16162a;
+  color: #e0e0e0;
+  border: 1px solid #2a2a4a;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+}
+
+.mic-select-wrapper select:focus {
+  border-color: #7c3aed;
+}
+
+.refresh-btn {
+  background: #16162a;
+  border: 1px solid #2a2a4a;
+  border-radius: 8px;
+  color: #999;
+  font-size: 1.1rem;
+  padding: 4px 8px;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.refresh-btn:hover {
+  color: #7c3aed;
+  border-color: #7c3aed;
+}
+
+.transcript-area {
+  flex: 1;
+  overflow-y: auto;
+  background: #16162a;
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid #2a2a4a;
+}
+
+.transcript-area:empty::before {
+  content: 'Transcriptions will appear here...';
+  color: #555;
+  font-style: italic;
+}
+
+.segment {
+  margin-bottom: 8px;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.timestamp {
+  color: #7c3aed;
+  font-size: 0.75rem;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  margin-right: 8px;
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  padding-bottom: 8px;
+}
+
+.record-btn {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 3px solid #7c3aed;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.record-btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 36px;
+  height: 36px;
+  background: #7c3aed;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: all 0.2s ease;
+}
+
+.record-btn:hover {
+  border-color: #8b5cf6;
+}
+
+.record-btn:hover::after {
+  background: #8b5cf6;
+}
+
+.record-btn.recording {
+  border-color: #ef4444;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.record-btn.recording::after {
+  background: #ef4444;
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+}
+
+.record-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50% { box-shadow: 0 0 0 16px rgba(239, 68, 68, 0); }
+}
+
+.status {
+  font-size: 0.85rem;
+  color: #888;
+  min-height: 1.2em;
+}
+
+.status.recording {
+  color: #ef4444;
+}
+
+.status.processing {
+  color: #f59e0b;
+}
+
+.status.error {
+  color: #ef4444;
+}
+
+/* Scrollbar */
+.transcript-area::-webkit-scrollbar {
+  width: 6px;
+}
+
+.transcript-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.transcript-area::-webkit-scrollbar-thumb {
+  background: #3a3a5c;
+  border-radius: 3px;
+}
