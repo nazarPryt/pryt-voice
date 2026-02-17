@@ -1,5 +1,9 @@
 {
   "name": "pryt-voice",
+  "author": {
+    "name": "Nazar",
+    "email": "nazar@pryt-voice.local"
+  },
   "version": "1.0.0",
   "description": "Local voice recognition app powered by whisper.cpp",
   "main": "./out/main/index.js",
