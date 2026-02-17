@@ -124,17 +124,45 @@ header h1 span {
   font-style: italic;
 }
 
-.segment {
-  margin-bottom: 8px;
+.transcript-block {
+  margin-bottom: 12px;
   line-height: 1.6;
   font-size: 0.95rem;
+  padding: 12px 40px 12px 12px;
+  border-radius: 8px;
+  background: #1e1e38;
+  border: 1px solid #2a2a4a;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  user-select: text;
+  position: relative;
 }
 
-.timestamp {
+.transcript-block:hover {
+  border-color: #7c3aed;
+  background: #22223c;
+}
+
+.transcript-block.copied {
+  border-color: #10b981;
+}
+
+.copy-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  color: #555;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.transcript-block:hover .copy-icon {
   color: #7c3aed;
-  font-size: 0.75rem;
-  font-family: 'SF Mono', 'Fira Code', monospace;
-  margin-right: 8px;
+}
+
+.transcript-block.copied .copy-icon {
+  color: #10b981;
 }
 
 .controls {

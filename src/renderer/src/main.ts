@@ -12,9 +12,13 @@ declare global {
     api: {
       transcribe(audioData: number[]): Promise<Segment[]>
       checkWhisper(): Promise<{ ready: boolean; missing: string[] }>
+      copyToClipboard(text: string): void
     }
   }
 }
+
+const copySvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>'
+const checkSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
 
 const recorder = new AudioRecorder()
 let isRecording = false
@@ -33,12 +37,34 @@ function setStatus(text: string, type: 'idle' | 'recording' | 'processing' | 'er
 }
 
 function addTranscript(segments: Segment[]) {
-  for (const seg of segments) {
-    const el = document.createElement('p')
-    el.className = 'segment'
-    el.innerHTML = `<span class="timestamp">[${seg.start} → ${seg.end}]</span> ${seg.text}`
-    transcriptEl.appendChild(el)
-  }
+  const text = segments.map((s) => s.text).join(' ')
+
+  const block = document.createElement('div')
+  block.className = 'transcript-block'
+  block.title = 'Click to copy'
+
+  const content = document.createElement('span')
+  content.className = 'transcript-text'
+  content.textContent = text
+
+  const icon = document.createElement('span')
+  icon.className = 'copy-icon'
+  icon.innerHTML = copySvg
+
+  block.appendChild(content)
+  block.appendChild(icon)
+
+  block.addEventListener('click', async () => {
+    window.api.copyToClipboard(content.textContent || '')
+    block.classList.add('copied')
+    icon.innerHTML = checkSvg
+    setTimeout(() => {
+      block.classList.remove('copied')
+      icon.innerHTML = copySvg
+    }, 1500)
+  })
+
+  transcriptEl.appendChild(block)
   transcriptEl.scrollTop = transcriptEl.scrollHeight
 }
 

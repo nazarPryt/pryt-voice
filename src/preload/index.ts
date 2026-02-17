@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer, clipboard } from 'electron'
 
 export interface Segment {
   start: string
@@ -12,5 +12,8 @@ contextBridge.exposeInMainWorld('api', {
   },
   checkWhisper: (): Promise<{ ready: boolean; missing: string[] }> => {
     return ipcRenderer.invoke('whisper:check')
+  },
+  copyToClipboard: (text: string): void => {
+    clipboard.writeText(text)
   }
 })
