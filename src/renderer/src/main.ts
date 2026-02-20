@@ -1,11 +1,6 @@
 import { AudioRecorder, enumerateMicrophones } from './recorder'
 import './assets/styles.css'
-
-interface Segment {
-  start: string
-  end: string
-  text: string
-}
+import type { Segment } from '../../shared/types'
 
 declare global {
   interface Window {
@@ -16,6 +11,8 @@ declare global {
     }
   }
 }
+
+const COPY_CONFIRMATION_DURATION_MS = 1500
 
 const copySvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>'
 const checkSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
@@ -36,9 +33,7 @@ function setStatus(text: string, type: 'idle' | 'recording' | 'processing' | 'er
   statusEl.className = `status ${type}`
 }
 
-function addTranscript(segments: Segment[]) {
-  const text = segments.map((s) => s.text).join(' ')
-
+function buildTranscriptBlock(text: string): HTMLElement {
   const block = document.createElement('div')
   block.className = 'transcript-block'
   block.title = 'Click to copy'
@@ -54,17 +49,22 @@ function addTranscript(segments: Segment[]) {
   block.appendChild(content)
   block.appendChild(icon)
 
-  block.addEventListener('click', async () => {
+  block.addEventListener('click', () => {
     window.api.copyToClipboard(content.textContent || '')
     block.classList.add('copied')
     icon.innerHTML = checkSvg
     setTimeout(() => {
       block.classList.remove('copied')
       icon.innerHTML = copySvg
-    }, 1500)
+    }, COPY_CONFIRMATION_DURATION_MS)
   })
 
-  transcriptEl.appendChild(block)
+  return block
+}
+
+function addTranscript(segments: Segment[]) {
+  const text = segments.map((s) => s.text).join(' ')
+  transcriptEl.appendChild(buildTranscriptBlock(text))
   transcriptEl.scrollTop = transcriptEl.scrollHeight
 }
 
@@ -107,58 +107,56 @@ function getSelectedDeviceId(): string | undefined {
   return micSelect.value || undefined
 }
 
-// Toggle recording on/off
-async function toggleRecording() {
-  if (isBusy) return
+async function startRecording() {
+  isBusy = true
+  recordBtn.classList.add('recording')
+  setStatus('Starting mic...', 'recording')
 
-  if (!isRecording) {
-    // START recording
-    isBusy = true
-    recordBtn.classList.add('recording')
-    setStatus('Starting mic...', 'recording')
-
-    try {
-      await recorder.start(getSelectedDeviceId())
-      isRecording = true
-      setStatus('Recording — click again to stop', 'recording')
-    } catch (err) {
-      setStatus(`Mic error: ${(err as Error).message}`, 'error')
-      recordBtn.classList.remove('recording')
-    } finally {
-      isBusy = false
-    }
-  } else {
-    // STOP recording and transcribe
-    isBusy = true
-    isRecording = false
+  try {
+    await recorder.start(getSelectedDeviceId())
+    isRecording = true
+    setStatus('Recording — click again to stop', 'recording')
+  } catch (err) {
+    setStatus(`Mic error: ${(err as Error).message}`, 'error')
     recordBtn.classList.remove('recording')
-    setStatus('Transcribing...', 'processing')
-
-    try {
-      const samples = await recorder.stop()
-      await recorder.destroy()
-
-      const audioData = Array.from(samples)
-      const segments = await window.api.transcribe(audioData)
-
-      if (segments.length === 0) {
-        setStatus('No speech detected', 'idle')
-      } else {
-        addTranscript(segments)
-        setStatus('Ready', 'idle')
-      }
-    } catch (err) {
-      setStatus(`Transcription error: ${(err as Error).message}`, 'error')
-    } finally {
-      isBusy = false
-    }
+  } finally {
+    isBusy = false
   }
 }
 
-// Click to toggle recording
+async function stopAndTranscribe() {
+  isBusy = true
+  isRecording = false
+  recordBtn.classList.remove('recording')
+  setStatus('Transcribing...', 'processing')
+
+  try {
+    const samples = await recorder.stop()
+    const audioData = Array.from(samples)
+    const segments = await window.api.transcribe(audioData)
+
+    if (segments.length === 0) {
+      setStatus('No speech detected', 'idle')
+    } else {
+      addTranscript(segments)
+      setStatus('Ready', 'idle')
+    }
+  } catch (err) {
+    setStatus(`Transcription error: ${(err as Error).message}`, 'error')
+  } finally {
+    await recorder.destroy()
+    isBusy = false
+  }
+}
+
+async function toggleRecording() {
+  if (isBusy) return
+  if (!isRecording) await startRecording()
+  else await stopAndTranscribe()
+}
+
 recordBtn.addEventListener('click', toggleRecording)
 
-// Spacebar to toggle
 document.addEventListener('keydown', (e) => {
   if (e.code === 'Space' && !e.repeat) {
     e.preventDefault()
@@ -166,7 +164,6 @@ document.addEventListener('keydown', (e) => {
   }
 })
 
-// Refresh mic list button
 refreshMicsBtn.addEventListener('click', () => {
   populateMicList()
 })
@@ -175,7 +172,6 @@ navigator.mediaDevices.addEventListener('devicechange', () => {
   populateMicList()
 })
 
-// Check whisper readiness on startup
 async function checkSetup() {
   try {
     const result = await window.api.checkWhisper()

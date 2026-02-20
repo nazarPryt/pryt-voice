@@ -1,3 +1,20 @@
+:root {
+  --color-bg: #1a1a2e;
+  --color-surface: #16162a;
+  --color-surface-hover: #22223c;
+  --color-border: #2a2a4a;
+  --color-text: #e0e0e0;
+  --color-text-muted: #888;
+  --color-text-dim: #555;
+  --color-accent: #7c3aed;
+  --color-accent-hover: #8b5cf6;
+  --color-error: #ef4444;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-transcript-bg: #1e1e38;
+  --color-scrollbar-thumb: #3a3a5c;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -6,8 +23,8 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #1a1a2e;
-  color: #e0e0e0;
+  background: var(--color-bg);
+  color: var(--color-text);
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -36,7 +53,7 @@ header h1 {
 }
 
 header h1 span {
-  color: #7c3aed;
+  color: var(--color-accent);
 }
 
 .whisper-status {
@@ -49,12 +66,12 @@ header h1 span {
 
 .whisper-status.ready {
   background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
+  color: var(--color-success);
 }
 
 .whisper-status.error {
   background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
+  color: var(--color-error);
 }
 
 .mic-select-wrapper {
@@ -66,15 +83,15 @@ header h1 span {
 
 .mic-select-wrapper label {
   font-size: 0.8rem;
-  color: #999;
+  color: var(--color-text-muted);
   white-space: nowrap;
 }
 
 .mic-select-wrapper select {
   flex: 1;
-  background: #16162a;
-  color: #e0e0e0;
-  border: 1px solid #2a2a4a;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 6px 10px;
   font-size: 0.85rem;
@@ -89,14 +106,14 @@ header h1 span {
 }
 
 .mic-select-wrapper select:focus {
-  border-color: #7c3aed;
+  border-color: var(--color-accent);
 }
 
 .refresh-btn {
-  background: #16162a;
-  border: 1px solid #2a2a4a;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
-  color: #999;
+  color: var(--color-text-muted);
   font-size: 1.1rem;
   padding: 4px 8px;
   cursor: pointer;
@@ -105,22 +122,22 @@ header h1 span {
 }
 
 .refresh-btn:hover {
-  color: #7c3aed;
-  border-color: #7c3aed;
+  color: var(--color-accent);
+  border-color: var(--color-accent);
 }
 
 .transcript-area {
   flex: 1;
   overflow-y: auto;
-  background: #16162a;
+  background: var(--color-surface);
   border-radius: 12px;
   padding: 16px;
-  border: 1px solid #2a2a4a;
+  border: 1px solid var(--color-border);
 }
 
 .transcript-area:empty::before {
   content: 'Transcriptions will appear here...';
-  color: #555;
+  color: var(--color-text-dim);
   font-style: italic;
 }
 
@@ -130,8 +147,8 @@ header h1 span {
   font-size: 0.95rem;
   padding: 12px 40px 12px 12px;
   border-radius: 8px;
-  background: #1e1e38;
-  border: 1px solid #2a2a4a;
+  background: var(--color-transcript-bg);
+  border: 1px solid var(--color-border);
   cursor: pointer;
   transition: border-color 0.2s, background 0.2s;
   user-select: text;
@@ -139,30 +156,30 @@ header h1 span {
 }
 
 .transcript-block:hover {
-  border-color: #7c3aed;
-  background: #22223c;
+  border-color: var(--color-accent);
+  background: var(--color-surface-hover);
 }
 
 .transcript-block.copied {
-  border-color: #10b981;
+  border-color: var(--color-success);
 }
 
 .copy-icon {
   position: absolute;
   top: 10px;
   right: 10px;
-  color: #555;
+  color: var(--color-text-dim);
   transition: color 0.2s;
   display: flex;
   align-items: center;
 }
 
 .transcript-block:hover .copy-icon {
-  color: #7c3aed;
+  color: var(--color-accent);
 }
 
 .transcript-block.copied .copy-icon {
-  color: #10b981;
+  color: var(--color-success);
 }
 
 .controls {
@@ -178,7 +195,7 @@ header h1 span {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  border: 3px solid #7c3aed;
+  border: 3px solid var(--color-accent);
   background: transparent;
   cursor: pointer;
   position: relative;
@@ -193,27 +210,27 @@ header h1 span {
   left: 50%;
   width: 36px;
   height: 36px;
-  background: #7c3aed;
+  background: var(--color-accent);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   transition: all 0.2s ease;
 }
 
 .record-btn:hover {
-  border-color: #8b5cf6;
+  border-color: var(--color-accent-hover);
 }
 
 .record-btn:hover::after {
-  background: #8b5cf6;
+  background: var(--color-accent-hover);
 }
 
 .record-btn.recording {
-  border-color: #ef4444;
+  border-color: var(--color-error);
   animation: pulse 1.5s ease-in-out infinite;
 }
 
 .record-btn.recording::after {
-  background: #ef4444;
+  background: var(--color-error);
   border-radius: 6px;
   width: 28px;
   height: 28px;
@@ -231,20 +248,20 @@ header h1 span {
 
 .status {
   font-size: 0.85rem;
-  color: #888;
+  color: var(--color-text-muted);
   min-height: 1.2em;
 }
 
 .status.recording {
-  color: #ef4444;
+  color: var(--color-error);
 }
 
 .status.processing {
-  color: #f59e0b;
+  color: var(--color-warning);
 }
 
 .status.error {
-  color: #ef4444;
+  color: var(--color-error);
 }
 
 /* Scrollbar */
@@ -257,6 +274,6 @@ header h1 span {
 }
 
 .transcript-area::-webkit-scrollbar-thumb {
-  background: #3a3a5c;
+  background: var(--color-scrollbar-thumb);
   border-radius: 3px;
 }

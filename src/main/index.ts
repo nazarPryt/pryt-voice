@@ -42,14 +42,21 @@ ipcMain.handle('whisper:transcribe', async (_event, audioData: number[]) => {
   return await transcribe(samples)
 })
 
-ipcMain.handle('whisper:check', () => {
-  return checkWhisperReady()
+ipcMain.handle('whisper:check', async () => {
+  try {
+    return checkWhisperReady()
+  } catch (err) {
+    console.error('whisper:check failed:', err)
+    throw err
+  }
 })
 
 app.whenReady().then(() => {
-  // Auto-grant microphone permission
-  session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
-    if (permission === 'media') {
+  // Grant microphone permission only to the app's own renderer pages
+  session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
+    const url = webContents.getURL()
+    const isAppPage = url.startsWith('file://') || url.startsWith(process.env['ELECTRON_RENDERER_URL'] ?? 'http://localhost')
+    if (permission === 'media' && isAppPage) {
       callback(true)
     } else {
       callback(false)

@@ -1,10 +1,7 @@
 import { contextBridge, ipcRenderer, clipboard } from 'electron'
+import type { Segment } from '../shared/types'
 
-export interface Segment {
-  start: string
-  end: string
-  text: string
-}
+export type { Segment }
 
 contextBridge.exposeInMainWorld('api', {
   transcribe: (audioData: number[]): Promise<Segment[]> => {

@@ -57,13 +57,9 @@ export class AudioRecorder {
   }
 
   async stop(): Promise<Float32Array> {
-    // Wait for start() to fully complete before stopping
+    // Let start errors propagate so the caller gets the real failure reason
     if (this.startPromise) {
-      try {
-        await this.startPromise
-      } catch {
-        return new Float32Array(0)
-      }
+      await this.startPromise
       this.startPromise = null
     }
 
@@ -106,8 +102,10 @@ export async function enumerateMicrophones(): Promise<MediaDeviceInfo[]> {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
     stream.getTracks().forEach((t) => t.stop())
-  } catch {
-    // Permission denied — return whatever we can
+  } catch (err) {
+    // Permission denied is expected — labels will be empty but device list is still useful.
+    // Re-throw anything else (e.g. NotFoundError) so the caller can surface it.
+    if ((err as DOMException).name !== 'NotAllowedError') throw err
   }
   const devices = await navigator.mediaDevices.enumerateDevices()
   return devices.filter((d) => d.kind === 'audioinput')
