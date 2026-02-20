@@ -93,10 +93,22 @@ bun run tauri icon src-tauri/icons/icon.png
 ## Project structure
 
 ```
-src/                      # React frontend (TypeScript)
-  components/             # UI components
-  hooks/                  # React hooks
+src/
+  components/
+    Header/               # Whisper status + app title
+    MicSelect/            # Microphone dropdown
+    RecordButton/         # Record/stop button
+    StatusBar/            # Status text
+    TranscriptArea/       # Scrollable transcript list
+    TranscriptBlock/      # Single transcript entry (click to copy)
+  hooks/
+    useRecorder.ts        # AudioRecorder React wrapper
+    useTranscription.ts   # Transcription state + invoke
+    useCopyText.ts        # Clipboard copy + copied state
+  shared/
+    types.ts              # Shared TypeScript types
   recorder.ts             # AudioWorklet-based mic capture
+  App.tsx                 # Root component
 public/
   audio-processor.js      # AudioWorklet processor (16kHz mono)
 src-tauri/
@@ -112,10 +124,18 @@ scripts/
 whisper/                  # Created by setup script, .gitignored
 ```
 
+## Dev tools
+
+```bash
+bun run format    # Format all source files with Prettier
+bun run fix:css   # Fix SCSS property order with Stylelint
+```
+
 ## Tech stack
 
 - **Tauri v2** (Rust backend + WebView frontend shell)
 - **React + TypeScript + Vite**
+- **SCSS Modules** (scoped styles, per-component)
 - **whisper.cpp** (spawned as a child process)
 - **Web Audio API** (AudioWorklet for 16kHz mono capture)
 - **ggml-base.en** model (English, good speed/accuracy balance)

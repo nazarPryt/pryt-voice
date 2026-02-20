@@ -1,0 +1,18 @@
+.app {
+   display: flex;
+   flex-direction: column;
+   gap: 16px;
+
+   height: 100vh;
+   padding: 24px;
+}
+
+.controls {
+   display: flex;
+   flex-direction: column;
+   flex-shrink: 0;
+   gap: 12px;
+   align-items: center;
+
+   padding-bottom: 8px;
+}

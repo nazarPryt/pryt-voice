@@ -1,0 +1,67 @@
+.btn {
+   cursor: pointer;
+
+   position: relative;
+
+   width: 80px;
+   height: 80px;
+   border: 3px solid var(--color-accent);
+   border-radius: 50%;
+
+   background: transparent;
+   outline: none;
+
+   transition: all 0.2s ease;
+
+   &::after {
+      content: '';
+
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+
+      background: var(--color-accent);
+
+      transition: all 0.2s ease;
+   }
+
+   &:hover {
+      border-color: var(--color-accent-hover);
+
+      &::after {
+         background: var(--color-accent-hover);
+      }
+   }
+
+   &:disabled {
+      cursor: not-allowed;
+      opacity: 0.4;
+   }
+
+   &.recording {
+      border-color: var(--color-error);
+      animation: pulse 1.5s ease-in-out infinite;
+
+      &::after {
+         width: 28px;
+         height: 28px;
+         border-radius: 6px;
+         background: var(--color-error);
+      }
+   }
+}
+
+@keyframes pulse {
+   0%,
+   100% {
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+   }
+   50% {
+      box-shadow: 0 0 0 16px rgba(239, 68, 68, 0);
+   }
+}

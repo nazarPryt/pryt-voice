@@ -16,6 +16,7 @@ bun run vite:build   # Build frontend only (output in dist/)
 ```
 
 First-time setup requires Rust and system deps:
+
 ```bash
 # 1. Install Rust: https://rustup.rs
 # 2. Install system deps (Ubuntu/Debian):
@@ -25,9 +26,11 @@ sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libglib2.0-dev \
 bun install
 bash scripts/setup-whisper.sh   # clones whisper.cpp, compiles it, downloads ggml-base.en.bin (~142MB)
 ```
+
 ## Prerequisites
 
 On Linux Before running the project, make sure the following tools are symlinked to `/usr/local/bin` so Tauri can find them in non-interactive shells:
+
 ```bash
 sudo ln -s ~/.cargo/bin/cargo /usr/local/bin/cargo
 sudo ln -s ~/.cargo/bin/rustc /usr/local/bin/rustc
@@ -41,20 +44,24 @@ This is required because Tauri runs `beforeDevCommand` and `beforeBuildCommand` 
 Two parts: Rust backend (`src-tauri/`) and React frontend (`src/`).
 
 ### Rust Backend (`src-tauri/src/`)
+
 - `main.rs` — Tauri app entry: registers `transcribe` and `check_whisper` commands, inits clipboard plugin.
 - `whisper.rs` — Encodes Float32Array→WAV, spawns whisper-cli, parses timestamped output into `Segment[]`.
 - `model_manager.rs` — Resolves whisper-cli and model paths. Dev: CWD-relative `whisper/whisper.cpp/build/bin/`. Production: `resource_dir/whisper/`.
 
 ### React Frontend (`src/`)
+
 - `main.tsx` — Vite entry, React root mount.
 - `App.tsx` — Root component: composes all UI, handles state, spacebar shortcut, mic enumeration.
 - `recorder.ts` — `AudioRecorder` class using AudioWorklet for 16kHz capture.
 - `hooks/useRecorder.ts` — React hook wrapping `AudioRecorder`.
-- `hooks/useTranscription.ts` — (utility hook, not currently used by App.tsx directly).
+- `hooks/useTranscription.ts` — Manages transcription state: calls `invoke('transcribe')`, accumulates `groups: Segment[][]`, exposes `isProcessing` and `errorMessage`.
+- `hooks/useCopyText.ts` — Handles copy-to-clipboard flow: writes to CLIPBOARD (Ctrl+V) and PRIMARY (middle-click) selections, manages `copied` state.
 - `components/` — Header, MicSelect, RecordButton, StatusBar, TranscriptArea, TranscriptBlock.
 - `public/audio-processor.js` — AudioWorkletProcessor that buffers samples.
 
 ### Config
+
 - `src-tauri/tauri.conf.json` — Tauri config: window, bundle resources, dev/build commands.
 - `src-tauri/capabilities/main.json` — Tauri v2 capability grants (clipboard write, core defaults).
 - `vite.config.ts` — Vite config (port 1420, React plugin, chrome105 target).

@@ -1,30 +1,41 @@
 {
-  "name": "pryt-voice",
-  "author": {
-    "name": "Nazar",
-    "email": "nazar@pryt-voice.local"
-  },
-  "version": "1.0.0",
-  "description": "Local voice recognition app powered by whisper.cpp",
-  "scripts": {
-    "dev": "tauri dev",
-    "build": "tauri build",
-    "vite:dev": "vite",
-    "vite:build": "vite build",
-    "tauri": "tauri"
-  },
-  "devDependencies": {
-    "@tauri-apps/cli": "^2",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "@vitejs/plugin-react": "^4",
-    "typescript": "^5",
-    "vite": "^6"
-  },
-  "dependencies": {
-    "@tauri-apps/api": "^2",
-    "@tauri-apps/plugin-clipboard-manager": "^2",
-    "react": "^18",
-    "react-dom": "^18"
-  }
+   "name": "pryt-voice",
+   "author": {
+      "name": "Nazar",
+      "email": "nazar@pryt-voice.local"
+   },
+   "version": "1.0.0",
+   "description": "Local voice recognition app powered by whisper.cpp",
+   "scripts": {
+      "dev": "tauri dev",
+      "build": "tauri build",
+      "vite:dev": "vite",
+      "vite:build": "vite build",
+      "tauri": "tauri",
+      "fix:css": "stylelint \"**/*.scss\" --fix",
+      "format": "prettier --write ."
+   },
+   "dependencies": {
+      "@tauri-apps/api": "^2",
+      "@tauri-apps/plugin-clipboard-manager": "^2",
+      "clsx": "^2.1.1",
+      "lucide-react": "^0.575.0",
+      "react": "^18",
+      "react-dom": "^18"
+   },
+   "devDependencies": {
+      "@tauri-apps/cli": "^2",
+      "@trivago/prettier-plugin-sort-imports": "^6.0.2",
+      "@types/node": "^25.3.0",
+      "@types/react": "^18",
+      "@types/react-dom": "^18",
+      "@vitejs/plugin-react": "^4",
+      "prettier": "^3.8.1",
+      "sass": "^1.97.3",
+      "stylelint": "^17.3.0",
+      "stylelint-config-clean-order": "^8.0.1",
+      "stylelint-order": "^7.0.1",
+      "typescript": "^5",
+      "vite": "^6"
+   }
 }

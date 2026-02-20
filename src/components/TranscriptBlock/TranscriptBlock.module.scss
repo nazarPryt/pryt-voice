@@ -1,0 +1,50 @@
+.block {
+   cursor: pointer;
+   user-select: text;
+
+   position: relative;
+
+   margin-bottom: 12px;
+   padding: 12px 40px 12px 12px;
+   border: 1px solid var(--color-border);
+   border-radius: 8px;
+
+   font-size: 0.95rem;
+   line-height: 1.6;
+
+   background: var(--color-transcript-bg);
+
+   transition:
+      border-color 0.2s,
+      background 0.2s;
+
+   &:hover {
+      border-color: var(--color-accent);
+      background: var(--color-surface-hover);
+
+      .copyIcon {
+         color: var(--color-accent);
+      }
+   }
+
+   &.copied {
+      border-color: var(--color-success);
+
+      .copyIcon {
+         color: var(--color-success);
+      }
+   }
+}
+
+.copyIcon {
+   position: absolute;
+   top: 10px;
+   right: 10px;
+
+   display: flex;
+   align-items: center;
+
+   color: var(--color-text-dim);
+
+   transition: color 0.2s;
+}

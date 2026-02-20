@@ -1,0 +1,1 @@
+export { TranscriptArea } from './TranscriptArea'

@@ -1,0 +1,15 @@
+.status {
+   min-height: 1.2em;
+   font-size: 0.85rem;
+   color: var(--color-text-muted);
+
+   &.recording {
+      color: var(--color-error);
+   }
+   &.processing {
+      color: var(--color-warning);
+   }
+   &.error {
+      color: var(--color-error);
+   }
+}

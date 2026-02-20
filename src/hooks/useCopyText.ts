@@ -1,18 +1,19 @@
-import { useState, useCallback } from 'react'
-import { writeText } from '@tauri-apps/plugin-clipboard-manager'
+import { useCallback, useState } from 'react'
+
 import { invoke } from '@tauri-apps/api/core'
+import { writeText } from '@tauri-apps/plugin-clipboard-manager'
 
 const COPY_DURATION_MS = 1500
 
 export function useCopyText() {
-  const [copied, setCopied] = useState(false)
+   const [copied, setCopied] = useState(false)
 
-  const copy = useCallback(async (text: string) => {
-    await writeText(text)
-    invoke('write_primary', { text }).catch(() => {})
-    setCopied(true)
-    setTimeout(() => setCopied(false), COPY_DURATION_MS)
-  }, [])
+   const copy = useCallback(async (text: string) => {
+      await writeText(text)
+      invoke('write_primary', { text }).catch(() => {})
+      setCopied(true)
+      setTimeout(() => setCopied(false), COPY_DURATION_MS)
+   }, [])
 
-  return { copied, copy }
+   return { copied, copy }
 }
