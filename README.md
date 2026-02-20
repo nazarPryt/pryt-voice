@@ -2,7 +2,7 @@
 
 Local voice recognition desktop app. Runs 100% offline — no data leaves your machine.
 
-Built with Electron + [whisper.cpp](https://github.com/ggerganov/whisper.cpp) (C++ port of OpenAI's Whisper).
+Built with [Tauri v2](https://tauri.app) + React + [whisper.cpp](https://github.com/ggerganov/whisper.cpp) (C++ port of OpenAI's Whisper).
 
 ## How it works
 
@@ -10,7 +10,8 @@ Click the record button (or press spacebar), speak, click again to stop. Your sp
 
 ## Prerequisites
 
-- **Node.js** >= 18
+- **Rust** — install from [rustup.rs](https://rustup.rs)
+- **Bun** — install from [bun.sh](https://bun.sh)
 - **git**, **cmake**, **build-essential** (C++ compiler)
 - **curl** (for downloading the model)
 
@@ -18,18 +19,22 @@ Click the record button (or press spacebar), speak, click again to stop. Your sp
 
 ```bash
 sudo apt install build-essential cmake curl git
+sudo apt install libwebkit2gtk-4.1-dev libgtk-3-dev libglib2.0-dev \
+  libssl-dev libayatana-appindicator3-dev librsvg2-dev
 ```
 
 ### Fedora
 
 ```bash
 sudo dnf install gcc-c++ cmake curl git
+sudo dnf install webkit2gtk4.1-devel gtk3-devel openssl-devel librsvg2-devel
 ```
 
 ### Arch
 
 ```bash
 sudo pacman -S base-devel cmake curl git
+sudo pacman -S webkit2gtk-4.1 gtk3 openssl librsvg
 ```
 
 ## Setup
@@ -41,10 +46,10 @@ git clone https://github.com/nazarPryt/pryt-voice
 cd pryt-voice
 ```
 
-### 2. Install Node dependencies
+### 2. Install JS dependencies
 
 ```bash
-npm install
+bun install
 ```
 
 ### 3. Build whisper.cpp and download the model
@@ -58,7 +63,7 @@ bash scripts/setup-whisper.sh
 ### 4. Run the app
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 ## Usage
@@ -71,29 +76,46 @@ npm run dev
 
 ## Packaging
 
-Build a distributable Linux package (AppImage + deb):
+Build a distributable package (AppImage + deb on Linux):
 
 ```bash
-npm run package:linux
+bun run build
 ```
 
-Output will be in the `dist/` directory.
+Output will be in `src-tauri/target/release/bundle/`.
+
+If you change the app icon, regenerate all required sizes from a square PNG source (512×512 RGBA):
+
+```bash
+bun run tauri icon src-tauri/icons/icon.png
+```
 
 ## Project structure
 
 ```
-src/
-  main/           # Electron main process (IPC, whisper.cpp integration)
-  preload/        # Context bridge (renderer <-> main)
-  renderer/       # UI (HTML, CSS, TypeScript, AudioWorklet)
+src/                      # React frontend (TypeScript)
+  components/             # UI components
+  hooks/                  # React hooks
+  recorder.ts             # AudioWorklet-based mic capture
+public/
+  audio-processor.js      # AudioWorklet processor (16kHz mono)
+src-tauri/
+  src/                    # Rust backend
+    main.rs               # Tauri entry, registers commands
+    whisper.rs            # WAV encoding, whisper-cli spawning, output parsing
+    model_manager.rs      # Resolves whisper-cli and model paths
+  icons/                  # App icons (all sizes)
+  tauri.conf.json         # Tauri config
+  capabilities/           # Tauri v2 permission grants
 scripts/
-  setup-whisper.sh  # Builds whisper.cpp + downloads model
-whisper/            # Created by setup script, .gitignored
+  setup-whisper.sh        # Builds whisper.cpp + downloads model
+whisper/                  # Created by setup script, .gitignored
 ```
 
 ## Tech stack
 
-- **Electron** + **electron-vite** (TypeScript)
+- **Tauri v2** (Rust backend + WebView frontend shell)
+- **React + TypeScript + Vite**
 - **whisper.cpp** (spawned as a child process)
 - **Web Audio API** (AudioWorklet for 16kHz mono capture)
 - **ggml-base.en** model (English, good speed/accuracy balance)

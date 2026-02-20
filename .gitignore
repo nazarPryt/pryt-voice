@@ -6,3 +6,7 @@ whisper/
 *.swo
 .DS_Store
 .idea
+
+# Tauri
+src-tauri/target/
+src-tauri/gen/

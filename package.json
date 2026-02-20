@@ -6,42 +6,25 @@
   },
   "version": "1.0.0",
   "description": "Local voice recognition app powered by whisper.cpp",
-  "main": "./out/main/index.js",
   "scripts": {
-    "dev": "electron-vite dev",
-    "build": "electron-vite build",
-    "preview": "electron-vite preview",
-    "package:linux": "electron-vite build && electron-builder --linux"
-  },
-  "dependencies": {
-    "@electron-toolkit/utils": "^4.0.0"
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "vite:dev": "vite",
+    "vite:build": "vite build",
+    "tauri": "tauri"
   },
   "devDependencies": {
-    "@electron-toolkit/tsconfig": "^1.0.1",
-    "electron": "^35.1.5",
-    "electron-builder": "^26.0.0",
-    "electron-vite": "^3.0.0",
-    "typescript": "^5.8.3"
+    "@tauri-apps/cli": "^2",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@vitejs/plugin-react": "^4",
+    "typescript": "^5",
+    "vite": "^6"
   },
-  "build": {
-    "appId": "com.pryt.voice",
-    "productName": "Pryt Voice",
-    "linux": {
-      "target": [
-        "AppImage",
-        "deb"
-      ],
-      "category": "Utility"
-    },
-    "extraResources": [
-      {
-        "from": "whisper/whisper.cpp/build/bin/whisper-cli",
-        "to": "whisper/whisper-cli"
-      },
-      {
-        "from": "whisper/models/ggml-base.en.bin",
-        "to": "whisper/ggml-base.en.bin"
-      }
-    ]
+  "dependencies": {
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-clipboard-manager": "^2",
+    "react": "^18",
+    "react-dom": "^18"
   }
 }
