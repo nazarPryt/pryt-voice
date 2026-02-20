@@ -15,7 +15,9 @@ function createWindow(): void {
       sandbox: false
     },
     titleBarStyle: 'hiddenInset',
-    title: 'Pryt Voice'
+    title: 'Pryt Voice',
+    backgroundColor: '#1a1a2e',
+    show: false
   })
 
   mainWindow.on('ready-to-show', () => {
