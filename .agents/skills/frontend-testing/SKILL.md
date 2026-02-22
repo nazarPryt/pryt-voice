@@ -1,30 +1,27 @@
 ---
 name: frontend-testing
-description: Generate Vitest + React Testing Library tests for Dify frontend components, hooks, and utilities. Triggers on testing, spec files, coverage, Vitest, RTL, unit tests, integration tests, or write/review test requests.
+description: Generate Vitest + React Testing Library tests for pryt-voice components, hooks, and stores. Triggers on testing, spec files, coverage, Vitest, RTL, unit tests, integration tests, or write/review test requests.
 ---
 
-# Dify Frontend Testing Skill
+# pryt-voice Frontend Testing Skill
 
-This skill enables Claude to generate high-quality, comprehensive frontend tests for the Dify project following established conventions and best practices.
-
-> **⚠️ Authoritative Source**: This skill is derived from `web/docs/test.md`. Use Vitest mock/timer APIs (`vi.*`).
+This skill enables Claude to generate high-quality, comprehensive frontend tests for the pryt-voice project following established conventions and best practices.
 
 ## When to Apply This Skill
 
 Apply this skill when the user:
 
-- Asks to **write tests** for a component, hook, or utility
+- Asks to **write tests** for a component, hook, or store
 - Asks to **review existing tests** for completeness
-- Mentions **Vitest**, **React Testing Library**, **RTL**, or **spec files**
+- Mentions **Vitest**, **React Testing Library**, **RTL**, or **test files**
 - Requests **test coverage** improvement
-- Uses `pnpm analyze-component` output as context
 - Mentions **testing**, **unit tests**, or **integration tests** for frontend code
-- Wants to understand **testing patterns** in the Dify codebase
+- Wants to understand **testing patterns** in the codebase
 
 **Do NOT apply** when:
 
-- User is asking about backend/API tests (Python/pytest)
-- User is asking about E2E tests (Playwright/Cypress)
+- User is asking about Rust/backend tests
+- User is asking about E2E tests
 - User is only asking conceptual questions without code context
 
 ## Quick Reference
@@ -33,176 +30,185 @@ Apply this skill when the user:
 
 | Tool | Version | Purpose |
 |------|---------|---------|
-| Vitest | 4.0.16 | Test runner |
-| React Testing Library | 16.0 | Component testing |
-| jsdom | - | Test environment |
-| nock | 14.0 | HTTP mocking |
+| Vitest | 4.x | Test runner (browser mode) |
+| vitest-browser-react | 2.x | Component/hook rendering in browser |
+| Playwright | - | Browser provider (Chromium) |
 | TypeScript | 5.x | Type safety |
+
+> **No jsdom.** All tests run in a real Chromium browser via `@vitest/browser` + Playwright.
 
 ### Key Commands
 
 ```bash
-# Run all tests
-pnpm test
+# Run all tests (one-shot)
+bun run test --run
 
 # Watch mode
-pnpm test:watch
+bun run test
 
 # Run specific file
-pnpm test path/to/file.spec.tsx
+bun run test --run src/path/to/file.test.ts
 
-# Generate coverage report
-pnpm test:coverage
-
-# Analyze component complexity
-pnpm analyze-component <path>
-
-# Review existing test
-pnpm analyze-component <path> --review
+# Open UI
+bun run test:ui
 ```
 
-### File Naming
+### File Naming & Location
 
-- Test files: `ComponentName.spec.tsx` (same directory as component)
-- Integration tests: `web/__tests__/` directory
+- Test files live in `__tests__/` subdirectory next to the source file
+- Component tests: `src/components/Foo/__tests__/Foo.test.tsx`
+- Hook tests: `src/hooks/__tests__/useHook.test.ts`
+- Store tests: `src/stores/__tests__/useStore.test.ts`
+- File extension: `.test.ts` / `.test.tsx` (not `.spec`)
 
-## Test Structure Template
+## Test Structure Templates
+
+### Component Test
 
 ```typescript
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import Component from './index'
+import { render } from 'vitest-browser-react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-// ✅ Import real project components (DO NOT mock these)
-// import Loading from '@/app/components/base/loading'
-// import { ChildComponent } from './child-component'
+import { MyComponent } from '../MyComponent'
+import s from '../MyComponent.module.scss'
 
-// ✅ Mock external dependencies only
-vi.mock('@/service/api')
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn() }),
-  usePathname: () => '/test',
+// Mock Tauri APIs — always required since they don't exist in browser test env
+vi.mock('@tauri-apps/api/core', () => ({
+   invoke: vi.fn().mockResolvedValue(undefined),
 }))
 
-// ✅ Zustand stores: Use real stores (auto-mocked globally)
-// Set test state with: useAppStore.setState({ ... })
+vi.mock('@tauri-apps/plugin-clipboard-manager', () => ({
+   writeText: vi.fn().mockResolvedValue(undefined),
+}))
 
-// Shared state for mocks (if needed)
-let mockSharedState = false
+describe('MyComponent', () => {
+   beforeEach(() => vi.useFakeTimers())
+   afterEach(() => vi.useRealTimers())
 
-describe('ComponentName', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()  // ✅ Reset mocks BEFORE each test
-    mockSharedState = false  // ✅ Reset shared state
-  })
+   it('renders the content', async () => {
+      const screen = await render(<MyComponent text="Hello" />)
+      await expect.element(screen.getByText('Hello')).toBeVisible()
+   })
 
-  // Rendering tests (REQUIRED)
-  describe('Rendering', () => {
-    it('should render without crashing', () => {
-      // Arrange
-      const props = { title: 'Test' }
-      
-      // Act
-      render(<Component {...props} />)
-      
-      // Assert
-      expect(screen.getByText('Test')).toBeInTheDocument()
-    })
-  })
+   it('applies active class after clicking', async () => {
+      const screen = await render(<MyComponent text="Click me" />)
+      await screen.getByRole('button').click()
+      await expect.element(screen.getByRole('button')).toHaveClass(s.active)
+   })
 
-  // Props tests (REQUIRED)
-  describe('Props', () => {
-    it('should apply custom className', () => {
-      render(<Component className="custom" />)
-      expect(screen.getByRole('button')).toHaveClass('custom')
-    })
-  })
+   it('resets after 1500ms', async () => {
+      const screen = await render(<MyComponent text="Timer test" />)
+      await screen.getByRole('button').click()
 
-  // User Interactions
-  describe('User Interactions', () => {
-    it('should handle click events', () => {
-      const handleClick = vi.fn()
-      render(<Component onClick={handleClick} />)
-      
-      fireEvent.click(screen.getByRole('button'))
-      
-      expect(handleClick).toHaveBeenCalledTimes(1)
-    })
-  })
-
-  // Edge Cases (REQUIRED)
-  describe('Edge Cases', () => {
-    it('should handle null data', () => {
-      render(<Component data={null} />)
-      expect(screen.getByText(/no data/i)).toBeInTheDocument()
-    })
-
-    it('should handle empty array', () => {
-      render(<Component items={[]} />)
-      expect(screen.getByText(/empty/i)).toBeInTheDocument()
-    })
-  })
+      await vi.advanceTimersByTimeAsync(1500)
+      await expect.element(screen.getByRole('button')).not.toHaveClass(s.active)
+   })
 })
 ```
+
+### Hook Test
+
+```typescript
+import { renderHook } from 'vitest-browser-react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { useMyHook } from '../useMyHook'
+
+vi.mock('@tauri-apps/api/core', () => ({
+   invoke: vi.fn(),
+}))
+
+const { invoke } = await import('@tauri-apps/api/core')
+const mockInvoke = vi.mocked(invoke)
+
+describe('useMyHook', () => {
+   beforeEach(() => {
+      vi.useFakeTimers()
+      mockInvoke.mockReset()
+   })
+   afterEach(() => vi.useRealTimers())
+
+   it('starts with default state', async () => {
+      const { result } = await renderHook(() => useMyHook())
+      expect(result.current.value).toBe(false)
+   })
+
+   it('updates state on action', async () => {
+      mockInvoke.mockResolvedValue('ok')
+      const { result, act } = await renderHook(() => useMyHook())
+      await act(async () => {
+         await result.current.doSomething()
+      })
+      expect(result.current.value).toBe(true)
+   })
+})
+```
+
+### Zustand Store Test
+
+```typescript
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+import { initialDataState, useAppStore } from '../useAppStore'
+
+vi.mock('@tauri-apps/api/core', () => ({
+   invoke: vi.fn(),
+}))
+
+const { invoke } = await import('@tauri-apps/api/core')
+const mockInvoke = vi.mocked(invoke)
+
+describe('useAppStore', () => {
+   beforeEach(() => {
+      useAppStore.setState(initialDataState)  // reset data, preserve action fns
+      mockInvoke.mockReset()
+   })
+
+   it('adds a group on success', async () => {
+      mockInvoke.mockResolvedValue([{ start: '00:00:00.000', end: '00:00:01.000', text: 'Hello' }])
+      await useAppStore.getState().transcribe(new Float32Array([0.1]))
+      expect(useAppStore.getState().groups).toHaveLength(1)
+   })
+
+   it('sets errorMessage on failure', async () => {
+      mockInvoke.mockRejectedValueOnce(new Error('not found'))
+      await useAppStore.getState().transcribe(new Float32Array([0.1])).catch(() => {})
+      expect(useAppStore.getState().errorMessage).toBe('not found')
+   })
+})
+```
+
+> Store tests need **no `renderHook`/`act`** — call `getState()` actions directly and assert `getState()` after.
+> Export `initialDataState` (data fields only, no fns) from the store for clean resets.
 
 ## Testing Workflow (CRITICAL)
 
 ### ⚠️ Incremental Approach Required
 
-**NEVER generate all test files at once.** For complex components or multi-file directories:
+**NEVER generate all test files at once.** For multiple files:
 
 1. **Analyze & Plan**: List all files, order by complexity (simple → complex)
-1. **Process ONE at a time**: Write test → Run test → Fix if needed → Next
-1. **Verify before proceeding**: Do NOT continue to next file until current passes
+2. **Process ONE at a time**: Write test → Run test → Fix if needed → Next
+3. **Verify before proceeding**: Do NOT continue to next file until current passes
 
 ```
 For each file:
-  ┌────────────────────────────────────────┐
-  │ 1. Write test                          │
-  │ 2. Run: pnpm test <file>.spec.tsx      │
-  │ 3. PASS? → Mark complete, next file    │
-  │    FAIL? → Fix first, then continue    │
-  └────────────────────────────────────────┘
+  ┌────────────────────────────────────────────────────────┐
+  │ 1. Write test                                          │
+  │ 2. Run: bun run test --run src/path/file.test.ts       │
+  │ 3. PASS? → Mark complete, next file                    │
+  │    FAIL? → Fix first, then continue                    │
+  └────────────────────────────────────────────────────────┘
 ```
 
 ### Complexity-Based Order
 
-Process in this order for multi-file testing:
-
-1. 🟢 Utility functions (simplest)
-1. 🟢 Custom hooks
-1. 🟡 Simple components (presentational)
-1. 🟡 Medium components (state, effects)
-1. 🔴 Complex components (API, routing)
-1. 🔴 Integration tests (index files - last)
-
-### When to Refactor First
-
-- **Complexity > 50**: Break into smaller pieces before testing
-- **500+ lines**: Consider splitting before testing
-- **Many dependencies**: Extract logic into hooks first
-
-> 📖 See `references/workflow.md` for complete workflow details and todo list format.
-
-## Testing Strategy
-
-### Path-Level Testing (Directory Testing)
-
-When assigned to test a directory/path, test **ALL content** within that path:
-
-- Test all components, hooks, utilities in the directory (not just `index` file)
-- Use incremental approach: one file at a time, verify each before proceeding
-- Goal: 100% coverage of ALL files in the directory
-
-### Integration Testing First
-
-**Prefer integration testing** when writing tests for a directory:
-
-- ✅ **Import real project components** directly (including base components and siblings)
-- ✅ **Only mock**: API services (`@/service/*`), `next/navigation`, complex context providers
-- ❌ **DO NOT mock** base components (`@/app/components/base/*`)
-- ❌ **DO NOT mock** sibling/child components in the same directory
-
-> See [Test Structure Template](#test-structure-template) for correct import/mock patterns.
+1. 🟢 Store tests (no rendering, fastest)
+2. 🟢 Utility functions
+3. 🟢 Custom hooks
+4. 🟡 Simple components (presentational)
+5. 🟡 Components with state/effects
+6. 🔴 Components with Tauri IPC calls
 
 ## Core Principles
 
@@ -210,116 +216,83 @@ When assigned to test a directory/path, test **ALL content** within that path:
 
 Every test should clearly separate:
 
-- **Arrange**: Setup test data and render component
-- **Act**: Perform user actions
+- **Arrange**: Setup mocks and render
+- **Act**: Perform user actions or call store actions
 - **Assert**: Verify expected outcomes
 
 ### 2. Black-Box Testing
 
 - Test observable behavior, not implementation details
-- Use semantic queries (getByRole, getByLabelText)
-- Avoid testing internal state directly
-- **Prefer pattern matching over hardcoded strings** in assertions:
-
-```typescript
-// ❌ Avoid: hardcoded text assertions
-expect(screen.getByText('Loading...')).toBeInTheDocument()
-
-// ✅ Better: role-based queries
-expect(screen.getByRole('status')).toBeInTheDocument()
-
-// ✅ Better: pattern matching
-expect(screen.getByText(/loading/i)).toBeInTheDocument()
-```
+- Use semantic queries (`getByRole`, `getByText`, `getByTitle`)
+- Avoid testing internal state directly (except in store tests)
 
 ### 3. Single Behavior Per Test
 
-Each test verifies ONE user-observable behavior:
-
-```typescript
-// ✅ Good: One behavior
-it('should disable button when loading', () => {
-  render(<Button loading />)
-  expect(screen.getByRole('button')).toBeDisabled()
-})
-
-// ❌ Bad: Multiple behaviors
-it('should handle loading state', () => {
-  render(<Button loading />)
-  expect(screen.getByRole('button')).toBeDisabled()
-  expect(screen.getByText('Loading...')).toBeInTheDocument()
-  expect(screen.getByRole('button')).toHaveClass('loading')
-})
-```
+Each test verifies ONE observable behavior.
 
 ### 4. Semantic Naming
 
-Use `should <behavior> when <condition>`:
+Use `<behavior> <condition>` (no "should" prefix — project style):
 
 ```typescript
-it('should show error message when validation fails')
-it('should call onSubmit when form is valid')
-it('should disable input when isReadOnly is true')
+it('adds a group when transcription returns segments')
+it('sets errorMessage on failure')
+it('loses copied class after 1500ms')
+```
+
+## Mocking Rules
+
+### Always Mock
+
+- `@tauri-apps/api/core` — `invoke` doesn't exist outside Tauri shell
+- `@tauri-apps/plugin-clipboard-manager` — `writeText` doesn't exist outside Tauri
+
+### Mock Pattern
+
+```typescript
+vi.mock('@tauri-apps/api/core', () => ({
+   invoke: vi.fn(),
+}))
+
+// Top-level await to get typed mock reference
+const { invoke } = await import('@tauri-apps/api/core')
+const mockInvoke = vi.mocked(invoke)
+```
+
+### Zustand Store in Component Tests
+
+Use `useAppStore.setState(...)` to set up store state before rendering:
+
+```typescript
+beforeEach(() => useAppStore.setState(initialDataState))
+
+it('shows ready status', async () => {
+   useAppStore.setState({ statusText: 'Ready', statusType: 'idle' })
+   const screen = await render(<StatusBar />)
+   await expect.element(screen.getByText('Ready')).toBeVisible()
+})
 ```
 
 ## Required Test Scenarios
 
-### Always Required (All Components)
+### Always Required
 
 1. **Rendering**: Component renders without crashing
-1. **Props**: Required props, optional props, default values
-1. **Edge Cases**: null, undefined, empty values, boundary conditions
+2. **Props/State**: Key props and initial state values
+3. **Edge Cases**: empty arrays, null/undefined, boundary conditions
 
 ### Conditional (When Present)
 
 | Feature | Test Focus |
 |---------|-----------|
-| `useState` | Initial state, transitions, cleanup |
-| `useEffect` | Execution, dependencies, cleanup |
-| Event handlers | All onClick, onChange, onSubmit, keyboard |
-| API calls | Loading, success, error states |
-| Routing | Navigation, params, query strings |
-| `useCallback`/`useMemo` | Referential equality |
-| Context | Provider values, consumer behavior |
-| Forms | Validation, submission, error display |
+| `useState` | Initial value, transitions |
+| Timer (`setTimeout`) | Use `vi.useFakeTimers()` + `vi.advanceTimersByTimeAsync()` |
+| `invoke` calls | Called with correct args, success path, error path |
+| CSS modules | Class applied/removed on state change |
+| Clipboard | `writeText` called with correct value |
 
-## Coverage Goals (Per File)
+## Project Configuration
 
-For each test file generated, aim for:
-
-- ✅ **100%** function coverage
-- ✅ **100%** statement coverage
-- ✅ **>95%** branch coverage
-- ✅ **>95%** line coverage
-
-> **Note**: For multi-file directories, process one file at a time with full coverage each. See `references/workflow.md`.
-
-## Detailed Guides
-
-For more detailed information, refer to:
-
-- `references/workflow.md` - **Incremental testing workflow** (MUST READ for multi-file testing)
-- `references/mocking.md` - Mock patterns, Zustand store testing, and best practices
-- `references/async-testing.md` - Async operations and API calls
-- `references/domain-components.md` - Workflow, Dataset, Configuration testing
-- `references/common-patterns.md` - Frequently used testing patterns
-- `references/checklist.md` - Test generation checklist and validation steps
-
-## Authoritative References
-
-### Primary Specification (MUST follow)
-
-- **`web/docs/test.md`** - The canonical testing specification. This skill is derived from this document.
-
-### Reference Examples in Codebase
-
-- `web/utils/classnames.spec.ts` - Utility function tests
-- `web/app/components/base/button/index.spec.tsx` - Component tests
-- `web/__mocks__/provider-context.ts` - Mock factory example
-
-### Project Configuration
-
-- `web/vitest.config.ts` - Vitest configuration
-- `web/vitest.setup.ts` - Test environment setup
-- `web/scripts/analyze-component.js` - Component analysis tool
-- Modules are not mocked automatically. Global mocks live in `web/vitest.setup.ts` (for example `react-i18next`, `next/image`); mock other modules like `ky` or `mime` locally in test files.
+- `vitest.config.ts` — Vitest config (browser mode, Playwright, path aliases)
+- `src/stores/useAppStore.ts` — Zustand store (export `initialDataState` for test resets)
+- Path alias: `@/` → `src/`

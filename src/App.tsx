@@ -1,6 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
-
-import { invoke } from '@tauri-apps/api/core'
+import { useCallback, useEffect } from 'react'
 
 import { Header } from '@/components/Header'
 import { MicSelect } from '@/components/MicSelect'
@@ -8,55 +6,27 @@ import { RecordButton } from '@/components/RecordButton'
 import { StatusBar } from '@/components/StatusBar'
 import { TranscriptArea } from '@/components/TranscriptArea'
 import { useRecorder } from '@/hooks/useRecorder'
-import { useTranscription } from '@/hooks/useTranscription'
-import { enumerateMicrophones } from '@/recorder'
-import type { CheckResult } from '@/shared/types'
+import { useAppStore } from '@/stores/useAppStore'
 
 import s from './App.module.scss'
 
-type StatusType = 'idle' | 'recording' | 'processing' | 'error'
-
 export function App() {
-   const [mics, setMics] = useState<MediaDeviceInfo[]>([])
-   const [selectedMicId, setSelectedMicId] = useState('')
-   const [whisperStatus, setWhisperStatus] = useState<CheckResult | null>(null)
-   const [checkingWhisper, setCheckingWhisper] = useState(true)
-   const [statusText, setStatusText] = useState('Initializing...')
-   const [statusType, setStatusType] = useState<StatusType>('idle')
+   const {
+      groups,
+      whisperStatus,
+      checkingWhisper,
+      mics,
+      selectedMicId,
+      statusText,
+      statusType,
+      isProcessing,
+      setStatus,
+      setSelectedMicId,
+      checkSetup,
+      populateMics,
+      transcribe,
+   } = useAppStore()
    const { isRecording, isBusy, startRecording, stopRecording } = useRecorder()
-   const { groups, transcribe, isProcessing } = useTranscription()
-
-   const setStatus = useCallback((text: string, type: StatusType = 'idle') => {
-      setStatusText(text)
-      setStatusType(type)
-   }, [])
-
-   const populateMicList = useCallback(async () => {
-      try {
-         const devices = await enumerateMicrophones()
-         setMics(devices)
-         if (devices.length === 0) {
-            setStatus('No microphones detected', 'error')
-         }
-      } catch (err) {
-         setStatus(`Mic enumerate error: ${(err as Error).message}`, 'error')
-      }
-   }, [setStatus])
-
-   const checkSetup = useCallback(async () => {
-      setCheckingWhisper(true)
-      try {
-         const result = await invoke<CheckResult>('check_whisper')
-         setWhisperStatus(result)
-         if (result.ready) {
-            setStatus('Ready — click button or press spacebar to record', 'idle')
-         }
-      } catch {
-         setWhisperStatus(null)
-      } finally {
-         setCheckingWhisper(false)
-      }
-   }, [setStatus])
 
    const toggleRecording = useCallback(async () => {
       if (isBusy || isProcessing) return
@@ -79,16 +49,16 @@ export function App() {
             setStatus(`Transcription error: ${err instanceof Error ? err.message : 'unknown'}`, 'error')
          }
       }
-   }, [isBusy, isProcessing, isRecording, selectedMicId, startRecording, stopRecording, setStatus])
+   }, [isBusy, isProcessing, isRecording, selectedMicId, startRecording, stopRecording, setStatus, transcribe])
 
    useEffect(() => {
-      populateMicList()
+      populateMics()
       checkSetup()
 
-      const handler = () => populateMicList()
+      const handler = () => populateMics()
       navigator.mediaDevices.addEventListener('devicechange', handler)
       return () => navigator.mediaDevices.removeEventListener('devicechange', handler)
-   }, [populateMicList, checkSetup])
+   }, [populateMics, checkSetup])
 
    useEffect(() => {
       const onKeyDown = (e: KeyboardEvent) => {
@@ -106,7 +76,7 @@ export function App() {
    return (
       <div className={s.app}>
          <Header whisperStatus={whisperStatus} checking={checkingWhisper} />
-         <MicSelect mics={mics} selectedId={selectedMicId} onSelect={setSelectedMicId} onRefresh={populateMicList} />
+         <MicSelect mics={mics} selectedId={selectedMicId} onSelect={setSelectedMicId} onRefresh={populateMics} />
          <TranscriptArea segments={groups} />
          <div className={s.controls}>
             <RecordButton
