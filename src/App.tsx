@@ -1,27 +1,33 @@
 import { useCallback, useEffect } from 'react'
 
-import { Header } from '@/components/Header'
-import { MicSelect } from '@/components/MicSelect'
-import { RecordButton } from '@/components/RecordButton'
-import { StatusBar } from '@/components/StatusBar'
-import { TranscriptArea } from '@/components/TranscriptArea'
+import * as Tabs from '@radix-ui/react-tabs'
+import { clsx } from 'clsx'
+import { History, Keyboard, Mic, Settings } from 'lucide-react'
+
+import { HistoryTab } from '@/components/HistoryTab'
+import { OverviewTab } from '@/components/OverviewTab'
+import { SettingsTab } from '@/components/SettingsTab'
+import { ShortcutsTab } from '@/components/ShortcutsTab'
 import { useRecorder } from '@/hooks/useRecorder'
 import { useAppStore } from '@/stores/useAppStore'
 
 import s from './App.module.scss'
 
+const NAV_ITEMS = [
+   { value: 'overview', label: 'Overview', Icon: Mic },
+   { value: 'history', label: 'History', Icon: History },
+   { value: 'shortcuts', label: 'Shortcuts', Icon: Keyboard },
+   { value: 'settings', label: 'Settings', Icon: Settings },
+] as const
+
 export function App() {
    const {
-      groups,
       whisperStatus,
       checkingWhisper,
       mics,
       selectedMicId,
-      statusText,
-      statusType,
       isProcessing,
       setStatus,
-      setSelectedMicId,
       checkSetup,
       populateMics,
       transcribe,
@@ -73,19 +79,57 @@ export function App() {
 
    const isDisabled = !whisperStatus?.ready || mics.length === 0
 
+   const whisperStatusClass = clsx(s.whisperBadge, {
+      [s.ready]: !checkingWhisper && whisperStatus?.ready,
+      [s.error]: !checkingWhisper && !whisperStatus?.ready,
+   })
+
+   function getWhisperText() {
+      if (checkingWhisper) return 'Checking...'
+      if (whisperStatus?.ready) return 'whisper.cpp ready'
+      if (whisperStatus) return `Missing: ${whisperStatus.missing.join(', ')}`
+      return 'Setup needed'
+   }
+
    return (
-      <div className={s.app}>
-         <Header whisperStatus={whisperStatus} checking={checkingWhisper} />
-         <MicSelect mics={mics} selectedId={selectedMicId} onSelect={setSelectedMicId} onRefresh={populateMics} />
-         <TranscriptArea segments={groups} />
-         <div className={s.controls}>
-            <RecordButton
-               isRecording={isRecording}
-               disabled={isDisabled || isBusy || isProcessing}
-               onClick={toggleRecording}
-            />
-            <StatusBar text={statusText} type={statusType} />
+      <Tabs.Root orientation="vertical" defaultValue="overview" className={s.app}>
+         <Tabs.List className={s.sidebar}>
+            <div className={s.logo}>
+               <span className={s.accent}>Pryt</span> Voice
+            </div>
+
+            <nav className={s.nav}>
+               {NAV_ITEMS.map(({ value, label, Icon }) => (
+                  <Tabs.Trigger key={value} value={value} className={s.navItem}>
+                     <Icon size={16} />
+                     <span>{label}</span>
+                  </Tabs.Trigger>
+               ))}
+            </nav>
+
+            <div className={s.sidebarFooter}>
+               <span className={whisperStatusClass}>{getWhisperText()}</span>
+            </div>
+         </Tabs.List>
+
+         <div className={s.content}>
+            <Tabs.Content value="overview" className={s.tabContent}>
+               <OverviewTab
+                  isRecording={isRecording}
+                  disabled={isDisabled || isBusy || isProcessing}
+                  onToggle={toggleRecording}
+               />
+            </Tabs.Content>
+            <Tabs.Content value="history" className={s.tabContent}>
+               <HistoryTab />
+            </Tabs.Content>
+            <Tabs.Content value="shortcuts" className={s.tabContent}>
+               <ShortcutsTab />
+            </Tabs.Content>
+            <Tabs.Content value="settings" className={s.tabContent}>
+               <SettingsTab />
+            </Tabs.Content>
          </div>
-      </div>
+      </Tabs.Root>
    )
 }

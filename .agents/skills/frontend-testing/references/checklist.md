@@ -83,10 +83,13 @@ Use this checklist when generating or reviewing tests for Dify frontend componen
 
 ### Queries
 
-- [ ] Prefer semantic queries (`getByRole`, `getByLabelText`)
+- [ ] Use `getByTestId` for interactive elements and stateful containers (buttons, cards, wrappers that carry state)
+- [ ] Use `getByText` only for dynamic content being explicitly asserted (transcript output, backend error messages)
+- [ ] Never use `getByTitle` — title is UI copy; renaming it silently breaks tests
+- [ ] Never import SCSS modules in tests to assert class names — use `data-` attributes instead
 - [ ] Use `queryBy*` for absence assertions
 - [ ] Use `findBy*` for async elements
-- [ ] `getByTestId` only as last resort
+- [ ] When `getByText` risks matching multiple elements, add `{ exact: true }` or scope with `getByTestId` first
 
 ### Async
 

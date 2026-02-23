@@ -1,5 +1,5 @@
-import { renderHook } from 'vitest-browser-react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { renderHook } from 'vitest-browser-react'
 
 import { useCopyText } from '../useCopyText'
 

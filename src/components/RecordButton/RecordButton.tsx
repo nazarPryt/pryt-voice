@@ -12,6 +12,7 @@ export function RecordButton({ isRecording, disabled, onClick }: Props) {
    return (
       <button
          id="record-btn"
+         data-testid="record-btn"
          className={clsx(s.btn, isRecording && s.recording)}
          title="Click to record (or press spacebar)"
          aria-keyshortcuts="Space"

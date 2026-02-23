@@ -45,7 +45,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
 
    setStatus: (text, type = 'idle') => set({ statusText: text, statusType: type }),
 
-   setSelectedMicId: (id) => set({ selectedMicId: id }),
+   setSelectedMicId: id => set({ selectedMicId: id }),
 
    checkSetup: async () => {
       set({ checkingWhisper: true })

@@ -1,0 +1,20 @@
+.overview {
+   overflow: hidden;
+   display: flex;
+   flex: 1;
+   flex-direction: column;
+   gap: 16px;
+
+   height: 100%;
+   padding: 24px;
+}
+
+.controls {
+   display: flex;
+   flex-direction: column;
+   flex-shrink: 0;
+   gap: 12px;
+   align-items: center;
+
+   padding-bottom: 8px;
+}

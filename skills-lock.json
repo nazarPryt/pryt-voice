@@ -5,6 +5,11 @@
       "source": "langgenius/dify",
       "sourceType": "github",
       "computedHash": "a74a374a4e15468b7e654c1417192268951021849c197fb6949f359779499b4b"
+    },
+    "git-commit": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "2607fc60629b82b257136dd2a7a373f0a4466c0b49df7746d845d59313c99b21"
     }
   }
 }

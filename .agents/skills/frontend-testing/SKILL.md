@@ -70,7 +70,6 @@ import { render } from 'vitest-browser-react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { MyComponent } from '../MyComponent'
-import s from '../MyComponent.module.scss'
 
 // Mock Tauri APIs — always required since they don't exist in browser test env
 vi.mock('@tauri-apps/api/core', () => ({
@@ -87,21 +86,24 @@ describe('MyComponent', () => {
 
    it('renders the content', async () => {
       const screen = await render(<MyComponent text="Hello" />)
+      // getByText is fine for dynamic content being asserted
       await expect.element(screen.getByText('Hello')).toBeVisible()
    })
 
-   it('applies active class after clicking', async () => {
+   it('enters active state after clicking', async () => {
       const screen = await render(<MyComponent text="Click me" />)
-      await screen.getByRole('button').click()
-      await expect.element(screen.getByRole('button')).toHaveClass(s.active)
+      // Anchor to data-testid, not title/role/text
+      await screen.getByTestId('my-component').click()
+      // Assert state via data-attribute, not CSS class
+      await expect.element(screen.getByTestId('my-component')).toHaveAttribute('data-active', 'true')
    })
 
-   it('resets after 1500ms', async () => {
+   it('leaves active state after 1500ms', async () => {
       const screen = await render(<MyComponent text="Timer test" />)
-      await screen.getByRole('button').click()
+      await screen.getByTestId('my-component').click()
 
       await vi.advanceTimersByTimeAsync(1500)
-      await expect.element(screen.getByRole('button')).not.toHaveClass(s.active)
+      await expect.element(screen.getByTestId('my-component')).not.toHaveAttribute('data-active', 'true')
    })
 })
 ```
@@ -223,7 +225,10 @@ Every test should clearly separate:
 ### 2. Black-Box Testing
 
 - Test observable behavior, not implementation details
-- Use semantic queries (`getByRole`, `getByText`, `getByTitle`)
+- Prefer `getByTestId` for interactive elements and stateful containers (anchor to test attributes, not copy or CSS)
+- Use `getByText` only for asserting dynamic content (transcript text, error messages from the backend)
+- Avoid `getByTitle` — titles are UI copy and break silently when renamed
+- Avoid asserting CSS module classes (`toHaveClass(s.foo)`) — use `data-` attributes on the element instead
 - Avoid testing internal state directly (except in store tests)
 
 ### 3. Single Behavior Per Test
@@ -288,7 +293,7 @@ it('shows ready status', async () => {
 | `useState` | Initial value, transitions |
 | Timer (`setTimeout`) | Use `vi.useFakeTimers()` + `vi.advanceTimersByTimeAsync()` |
 | `invoke` calls | Called with correct args, success path, error path |
-| CSS modules | Class applied/removed on state change |
+| CSS modules | Add `data-<state>` attribute to the element; assert with `toHaveAttribute` — never assert on CSS class names |
 | Clipboard | `writeText` called with correct value |
 
 ## Project Configuration

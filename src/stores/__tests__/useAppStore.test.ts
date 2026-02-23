@@ -73,18 +73,22 @@ describe('useAppStore', () => {
       it('sets errorMessage on failure', async () => {
          mockInvoke.mockRejectedValueOnce(new Error('whisper-cli not found'))
 
-         await useAppStore.getState().transcribe(new Float32Array([0.1])).catch(() => {})
+         await useAppStore
+            .getState()
+            .transcribe(new Float32Array([0.1]))
+            .catch(() => {})
 
          expect(useAppStore.getState().errorMessage).toBe('whisper-cli not found')
          expect(useAppStore.getState().isProcessing).toBe(false)
       })
 
       it('clears errorMessage on next successful call', async () => {
-         mockInvoke
-            .mockRejectedValueOnce(new Error('first fail'))
-            .mockResolvedValueOnce([seg('Recovery')])
+         mockInvoke.mockRejectedValueOnce(new Error('first fail')).mockResolvedValueOnce([seg('Recovery')])
 
-         await useAppStore.getState().transcribe(new Float32Array([0.1])).catch(() => {})
+         await useAppStore
+            .getState()
+            .transcribe(new Float32Array([0.1]))
+            .catch(() => {})
          await useAppStore.getState().transcribe(new Float32Array([0.2]))
 
          expect(useAppStore.getState().errorMessage).toBeNull()

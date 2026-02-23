@@ -2,36 +2,50 @@
 
 ## Query Priority
 
-Use queries in this order (most to least preferred):
-
 ```typescript
-// 1. getByRole - Most recommended (accessibility)
-screen.getByRole('button', { name: /submit/i })
-screen.getByRole('textbox', { name: /email/i })
-screen.getByRole('heading', { level: 1 })
+// ✅ 1. getByTestId — preferred for interactive elements and stateful containers
+//    Add data-testid to the component; the test anchor survives copy/style changes
+screen.getByTestId('record-btn')
+screen.getByTestId('transcript-block')
 
-// 2. getByLabelText - Form fields
+// ✅ 2. getByLabelText — form fields with visible labels
 screen.getByLabelText('Email address')
 screen.getByLabelText(/password/i)
 
-// 3. getByPlaceholderText - When no label
+// ✅ 3. getByPlaceholderText — inputs without labels
 screen.getByPlaceholderText('Search...')
 
-// 4. getByText - Non-interactive elements
-screen.getByText('Welcome to Dify')
-screen.getByText(/loading/i)
+// ✅ 4. getByText — dynamic content being asserted (output text, error messages)
+//    Use { exact: true } when the string might be a substring of other elements
+screen.getByText('Hello world')               // transcript output — fine
+screen.getByText('Ready', { exact: true })    // when partial match is ambiguous
 
-// 5. getByDisplayValue - Current input value
-screen.getByDisplayValue('current value')
-
-// 6. getByAltText - Images
+// ✅ 5. getByAltText — images
 screen.getByAltText('Company logo')
 
-// 7. getByTitle - Tooltip elements
-screen.getByTitle('Close')
+// ❌ getByTitle — avoid; title is UI copy, renaming it silently breaks tests
+// ❌ getByRole without name — too broad for non-semantic buttons (CSS-only buttons)
+```
 
-// 8. getByTestId - Last resort only!
-screen.getByTestId('custom-element')
+## State Assertions: `data-` attributes vs CSS classes
+
+Prefer `data-` attributes on the element for state — never assert on CSS module class names.
+
+```tsx
+// ✅ Component: expose state as a data attribute
+<div
+   data-testid="transcript-block"
+   data-copied={copied}        // boolean serialises to "true" / "false"
+   className={clsx(s.block, copied && s.copied)}
+>
+
+// ✅ Test: assert the attribute
+await expect.element(screen.getByTestId('transcript-block')).toHaveAttribute('data-copied', 'true')
+await expect.element(screen.getByTestId('transcript-block')).not.toHaveAttribute('data-copied', 'true')
+
+// ❌ Avoid: importing SCSS just to check class names
+import s from '../Component.module.scss'
+expect(el).toHaveClass(s.copied)   // breaks if class is renamed
 ```
 
 ## Event Handling Patterns
