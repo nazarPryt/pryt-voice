@@ -2,6 +2,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { create } from 'zustand'
 
 import { enumerateMicrophones } from '@/recorder'
+import { STORAGE_KEYS } from '@/shared/storageKeys'
 import type { CheckResult, Segment } from '@/shared/types'
 
 type StatusType = 'idle' | 'recording' | 'processing' | 'error'
@@ -12,6 +13,7 @@ interface AppState {
    checkingWhisper: boolean
    // Mics
    mics: MediaDeviceInfo[]
+   micsLoading: boolean
    selectedMicId: string
    // Status bar
    statusText: string
@@ -32,6 +34,7 @@ export const initialDataState = {
    whisperStatus: null,
    checkingWhisper: true,
    mics: [],
+   micsLoading: true,
    selectedMicId: '',
    statusText: 'Initializing...',
    statusType: 'idle' as StatusType,
@@ -45,7 +48,10 @@ export const useAppStore = create<AppState>()((set, get) => ({
 
    setStatus: (text, type = 'idle') => set({ statusText: text, statusType: type }),
 
-   setSelectedMicId: id => set({ selectedMicId: id }),
+   setSelectedMicId: id => {
+      localStorage.setItem(STORAGE_KEYS.SELECTED_MIC_ID, id)
+      set({ selectedMicId: id })
+   },
 
    checkSetup: async () => {
       set({ checkingWhisper: true })
@@ -63,14 +69,25 @@ export const useAppStore = create<AppState>()((set, get) => ({
    },
 
    populateMics: async () => {
+      set({ micsLoading: true })
       try {
          const devices = await enumerateMicrophones()
          set({ mics: devices })
          if (devices.length === 0) {
             get().setStatus('No microphones detected', 'error')
+            return
+         }
+         const saved = localStorage.getItem(STORAGE_KEYS.SELECTED_MIC_ID)
+         const isAvailable = saved && devices.some(d => d.deviceId === saved)
+         if (isAvailable) {
+            set({ selectedMicId: saved })
+         } else if (!get().selectedMicId) {
+            set({ selectedMicId: devices[0].deviceId })
          }
       } catch (err) {
          get().setStatus(`Mic enumerate error: ${(err as Error).message}`, 'error')
+      } finally {
+         set({ micsLoading: false })
       }
    },
 

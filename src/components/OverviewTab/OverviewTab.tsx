@@ -13,11 +13,11 @@ interface Props {
 }
 
 export function OverviewTab({ isRecording, disabled, onToggle }: Props) {
-   const { mics, selectedMicId, setSelectedMicId, populateMics, groups, statusText, statusType } = useAppStore()
+   const { mics, micsLoading, selectedMicId, setSelectedMicId, populateMics, groups, statusText, statusType } = useAppStore()
 
    return (
       <div className={s.overview}>
-         <MicSelect mics={mics} selectedId={selectedMicId} onSelect={setSelectedMicId} onRefresh={populateMics} />
+         <MicSelect mics={mics} selectedId={selectedMicId} loading={micsLoading} onSelect={setSelectedMicId} onRefresh={populateMics} />
          <TranscriptArea segments={groups} />
          <div className={s.controls}>
             <RecordButton isRecording={isRecording} disabled={disabled} onClick={onToggle} />
