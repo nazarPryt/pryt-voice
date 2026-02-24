@@ -75,13 +75,14 @@
    border-radius: 6px;
 
    background: var(--color-surface-hover);
+
    animation: pulse 1.2s ease-in-out infinite;
 }
 
 .captureHint {
    font-size: 0.8rem;
-   color: var(--color-text-dim);
    font-style: italic;
+   color: var(--color-text-dim);
 }
 
 .btn {
@@ -95,6 +96,7 @@
    color: var(--color-text);
 
    background: var(--color-accent);
+
    transition: opacity 0.15s;
 
    &:hover:not(:disabled) {
@@ -118,7 +120,10 @@
    color: var(--color-text-muted);
 
    background: transparent;
-   transition: border-color 0.15s, color 0.15s;
+
+   transition:
+      border-color 0.15s,
+      color 0.15s;
 
    &:hover {
       border-color: var(--color-text-muted);

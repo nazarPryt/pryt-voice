@@ -1,6 +1,8 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 
 import * as Tabs from '@radix-ui/react-tabs'
+import { invoke } from '@tauri-apps/api/core'
+import { listen } from '@tauri-apps/api/event'
 import { clsx } from 'clsx'
 import { History, Keyboard, Mic, Settings } from 'lucide-react'
 
@@ -9,8 +11,8 @@ import { OverviewTab } from '@/components/OverviewTab'
 import { SettingsTab } from '@/components/SettingsTab'
 import { ShortcutsTab } from '@/components/ShortcutsTab'
 import { useRecorder } from '@/hooks/useRecorder'
+import { formatShortcut } from '@/shared/utils/shortcut'
 import { useAppStore } from '@/stores/useAppStore'
-import { matchesShortcut } from '@/shared/types'
 
 import s from './App.module.scss'
 
@@ -29,6 +31,7 @@ export function App() {
       selectedMicId,
       isProcessing,
       recordingShortcut,
+      isCapturingShortcut,
       setStatus,
       checkSetup,
       populateMics,
@@ -68,16 +71,33 @@ export function App() {
       return () => navigator.mediaDevices.removeEventListener('devicechange', handler)
    }, [populateMics, checkSetup])
 
+   // Register the global (OS-level) shortcut whenever it changes.
    useEffect(() => {
-      const onKeyDown = (e: KeyboardEvent) => {
-         if (!e.repeat && matchesShortcut(e, recordingShortcut)) {
-            e.preventDefault()
-            toggleRecording()
-         }
+      const shortcutStr = formatShortcut(recordingShortcut)
+      invoke('register_shortcut', { shortcut: shortcutStr }).catch(err =>
+         setStatus(`Shortcut error: ${String(err)}`, 'error'),
+      )
+   }, [recordingShortcut, setStatus])
+
+   // Keep refs so the listener registered once always calls the latest version.
+   const toggleRecordingRef = useRef(toggleRecording)
+   const isCapturingRef = useRef(isCapturingShortcut)
+   useEffect(() => {
+      toggleRecordingRef.current = toggleRecording
+   }, [toggleRecording])
+   useEffect(() => {
+      isCapturingRef.current = isCapturingShortcut
+   }, [isCapturingShortcut])
+
+   // Register the listener once — reads latest state via refs.
+   useEffect(() => {
+      const unlisten = listen<void>('toggle-recording', () => {
+         if (!isCapturingRef.current) toggleRecordingRef.current()
+      })
+      return () => {
+         unlisten.then(fn => fn())
       }
-      document.addEventListener('keydown', onKeyDown)
-      return () => document.removeEventListener('keydown', onKeyDown)
-   }, [toggleRecording, recordingShortcut])
+   }, [])
 
    const isDisabled = !whisperStatus?.ready || mics.length === 0
 

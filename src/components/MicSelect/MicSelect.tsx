@@ -23,7 +23,13 @@ export function MicSelect({ mics, selectedId, loading, onSelect, onRefresh }: Pr
       <div className={s.wrapper}>
          <label htmlFor="mic-select">Microphone:</label>
          <div className={s.selectWrapper}>
-            <select id="mic-select" className={s.select} value={selectedId} onChange={e => onSelect(e.target.value)} disabled={loading}>
+            <select
+               id="mic-select"
+               className={s.select}
+               value={selectedId}
+               onChange={e => onSelect(e.target.value)}
+               disabled={loading}
+            >
                <MicOptions mics={mics} loading={loading} />
             </select>
          </div>

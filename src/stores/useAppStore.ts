@@ -25,10 +25,12 @@ interface AppState {
    errorMessage: string | null
    // Shortcuts
    recordingShortcut: KeyShortcut
+   isCapturingShortcut: boolean
    // Actions
    setStatus: (text: string, type?: StatusType) => void
    setSelectedMicId: (id: string) => void
    setRecordingShortcut: (shortcut: KeyShortcut) => void
+   setIsCapturingShortcut: (capturing: boolean) => void
    checkSetup: () => Promise<void>
    populateMics: () => Promise<void>
    transcribe: (audioData: Float32Array) => Promise<Segment[]>
@@ -55,6 +57,7 @@ export const initialDataState = {
    isProcessing: false,
    errorMessage: null,
    recordingShortcut: loadRecordingShortcut(),
+   isCapturingShortcut: false,
 }
 
 export const useAppStore = create<AppState>()((set, get) => ({
@@ -71,6 +74,8 @@ export const useAppStore = create<AppState>()((set, get) => ({
       localStorage.setItem(STORAGE_KEYS.RECORDING_SHORTCUT, JSON.stringify(shortcut))
       set({ recordingShortcut: shortcut })
    },
+
+   setIsCapturingShortcut: capturing => set({ isCapturingShortcut: capturing }),
 
    checkSetup: async () => {
       set({ checkingWhisper: true })

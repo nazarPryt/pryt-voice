@@ -1,37 +1,51 @@
 import { useEffect, useState } from 'react'
 
-import { useAppStore } from '@/stores/useAppStore'
-import { DEFAULT_RECORDING_SHORTCUT, formatShortcut } from '@/shared/types'
+import { DEFAULT_RECORDING_SHORTCUT } from '@/shared/types'
 import type { KeyShortcut } from '@/shared/types'
+import { formatShortcut } from '@/shared/utils/shortcut'
+import { useAppStore } from '@/stores/useAppStore'
 
 import s from './ShortcutsTab.module.scss'
 
-const MODIFIER_CODES = new Set(['ControlLeft', 'ControlRight', 'ShiftLeft', 'ShiftRight', 'AltLeft', 'AltRight', 'MetaLeft', 'MetaRight'])
+const MODIFIER_CODES = new Set([
+   'ControlLeft',
+   'ControlRight',
+   'ShiftLeft',
+   'ShiftRight',
+   'AltLeft',
+   'AltRight',
+   'MetaLeft',
+   'MetaRight',
+])
 
 export function ShortcutsTab() {
-   const { recordingShortcut, setRecordingShortcut } = useAppStore()
+   const { recordingShortcut, setRecordingShortcut, setIsCapturingShortcut } = useAppStore()
    const [isCapturing, setIsCapturing] = useState(false)
    const [pending, setPending] = useState<KeyShortcut | null>(null)
 
    const startCapture = () => {
       setIsCapturing(true)
+      setIsCapturingShortcut(true)
       setPending(null)
    }
 
    const cancelCapture = () => {
       setIsCapturing(false)
+      setIsCapturingShortcut(false)
       setPending(null)
    }
 
    const saveShortcut = () => {
       if (pending) setRecordingShortcut(pending)
       setIsCapturing(false)
+      setIsCapturingShortcut(false)
       setPending(null)
    }
 
    const resetToDefault = () => {
       setRecordingShortcut(DEFAULT_RECORDING_SHORTCUT)
       setIsCapturing(false)
+      setIsCapturingShortcut(false)
       setPending(null)
    }
 

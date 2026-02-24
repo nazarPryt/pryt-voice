@@ -31,10 +31,37 @@ fn write_primary(text: String) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+fn register_shortcut(app: tauri::AppHandle, shortcut: String) -> Result<(), String> {
+    use tauri::Emitter;
+    use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
+
+    app.global_shortcut()
+        .unregister_all()
+        .map_err(|e| e.to_string())?;
+
+    let app_handle = app.clone();
+    app.global_shortcut()
+        .on_shortcut(shortcut.as_str(), move |_app, _shortcut, event| {
+            if event.state == ShortcutState::Pressed {
+                let _ = app_handle.emit("toggle-recording", ());
+            }
+        })
+        .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_clipboard_manager::init())
-        .invoke_handler(tauri::generate_handler![transcribe, check_whisper, write_primary])
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .invoke_handler(tauri::generate_handler![
+            transcribe,
+            check_whisper,
+            write_primary,
+            register_shortcut
+        ])
         .setup(|app| {
             #[cfg(target_os = "linux")]
             {

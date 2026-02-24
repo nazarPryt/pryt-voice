@@ -21,7 +21,7 @@ export function TranscriptArea({ segments }: Props) {
    return (
       <div id="transcript" className={s.area} ref={ref}>
          {segments.map((group, i) => (
-            <TranscriptBlock key={group[0]?.start ?? i} text={group.map(seg => seg.text).join(' ')} />
+            <TranscriptBlock key={i} text={group.map(seg => seg.text).join(' ')} />
          ))}
       </div>
    )

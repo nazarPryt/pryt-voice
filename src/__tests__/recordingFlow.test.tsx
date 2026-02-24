@@ -14,6 +14,10 @@ vi.mock('@tauri-apps/plugin-clipboard-manager', () => ({
    writeText: vi.fn().mockResolvedValue(undefined),
 }))
 
+vi.mock('@tauri-apps/api/event', () => ({
+   listen: vi.fn().mockResolvedValue(vi.fn()),
+}))
+
 vi.mock('@/recorder', () => {
    class AudioRecorder {
       start = vi.fn().mockResolvedValue(undefined)
