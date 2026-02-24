@@ -23,16 +23,30 @@
    display: flex;
    gap: 16px;
    align-items: center;
+   justify-content: space-between;
 
-   padding: 10px 14px;
+   padding: 12px 14px;
    border: 1px solid var(--color-border);
    border-radius: 8px;
 
    background: var(--color-surface);
 }
 
-.key {
+.itemLeft {
+   display: flex;
+   flex-direction: column;
+   gap: 6px;
+}
+
+.itemActions {
+   display: flex;
    flex-shrink: 0;
+   gap: 6px;
+   align-items: center;
+}
+
+.key {
+   align-self: flex-start;
 
    padding: 3px 10px;
    border: 1px solid var(--color-border);
@@ -48,4 +62,76 @@
 .description {
    font-size: 0.875rem;
    color: var(--color-text-muted);
+}
+
+.captureZone {
+   display: flex;
+   align-items: center;
+
+   min-width: 120px;
+   min-height: 26px;
+   padding: 3px 10px;
+   border: 1px dashed var(--color-accent);
+   border-radius: 6px;
+
+   background: var(--color-surface-hover);
+   animation: pulse 1.2s ease-in-out infinite;
+}
+
+.captureHint {
+   font-size: 0.8rem;
+   color: var(--color-text-dim);
+   font-style: italic;
+}
+
+.btn {
+   cursor: pointer;
+
+   padding: 4px 12px;
+   border: 1px solid var(--color-accent);
+   border-radius: 6px;
+
+   font-size: 0.8rem;
+   color: var(--color-text);
+
+   background: var(--color-accent);
+   transition: opacity 0.15s;
+
+   &:hover:not(:disabled) {
+      opacity: 0.85;
+   }
+
+   &:disabled {
+      cursor: not-allowed;
+      opacity: 0.4;
+   }
+}
+
+.btnGhost {
+   cursor: pointer;
+
+   padding: 4px 12px;
+   border: 1px solid var(--color-border);
+   border-radius: 6px;
+
+   font-size: 0.8rem;
+   color: var(--color-text-muted);
+
+   background: transparent;
+   transition: border-color 0.15s, color 0.15s;
+
+   &:hover {
+      border-color: var(--color-text-muted);
+      color: var(--color-text);
+   }
+}
+
+@keyframes pulse {
+   0%,
+   100% {
+      border-color: var(--color-accent);
+   }
+   50% {
+      border-color: var(--color-accent-hover);
+   }
 }

@@ -10,6 +10,7 @@ import { SettingsTab } from '@/components/SettingsTab'
 import { ShortcutsTab } from '@/components/ShortcutsTab'
 import { useRecorder } from '@/hooks/useRecorder'
 import { useAppStore } from '@/stores/useAppStore'
+import { matchesShortcut } from '@/shared/types'
 
 import s from './App.module.scss'
 
@@ -27,6 +28,7 @@ export function App() {
       mics,
       selectedMicId,
       isProcessing,
+      recordingShortcut,
       setStatus,
       checkSetup,
       populateMics,
@@ -68,14 +70,14 @@ export function App() {
 
    useEffect(() => {
       const onKeyDown = (e: KeyboardEvent) => {
-         if (e.code === 'Space' && !e.repeat) {
+         if (!e.repeat && matchesShortcut(e, recordingShortcut)) {
             e.preventDefault()
             toggleRecording()
          }
       }
       document.addEventListener('keydown', onKeyDown)
       return () => document.removeEventListener('keydown', onKeyDown)
-   }, [toggleRecording])
+   }, [toggleRecording, recordingShortcut])
 
    const isDisabled = !whisperStatus?.ready || mics.length === 0
 

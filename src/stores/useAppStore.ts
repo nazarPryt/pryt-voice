@@ -3,7 +3,8 @@ import { create } from 'zustand'
 
 import { enumerateMicrophones } from '@/recorder'
 import { STORAGE_KEYS } from '@/shared/storageKeys'
-import type { CheckResult, Segment } from '@/shared/types'
+import { DEFAULT_RECORDING_SHORTCUT } from '@/shared/types'
+import type { CheckResult, KeyShortcut, Segment } from '@/shared/types'
 
 type StatusType = 'idle' | 'recording' | 'processing' | 'error'
 
@@ -22,12 +23,24 @@ interface AppState {
    groups: Segment[][]
    isProcessing: boolean
    errorMessage: string | null
+   // Shortcuts
+   recordingShortcut: KeyShortcut
    // Actions
    setStatus: (text: string, type?: StatusType) => void
    setSelectedMicId: (id: string) => void
+   setRecordingShortcut: (shortcut: KeyShortcut) => void
    checkSetup: () => Promise<void>
    populateMics: () => Promise<void>
    transcribe: (audioData: Float32Array) => Promise<Segment[]>
+}
+
+function loadRecordingShortcut(): KeyShortcut {
+   try {
+      const raw = localStorage.getItem(STORAGE_KEYS.RECORDING_SHORTCUT)
+      return raw ? (JSON.parse(raw) as KeyShortcut) : DEFAULT_RECORDING_SHORTCUT
+   } catch {
+      return DEFAULT_RECORDING_SHORTCUT
+   }
 }
 
 export const initialDataState = {
@@ -41,6 +54,7 @@ export const initialDataState = {
    groups: [],
    isProcessing: false,
    errorMessage: null,
+   recordingShortcut: loadRecordingShortcut(),
 }
 
 export const useAppStore = create<AppState>()((set, get) => ({
@@ -53,13 +67,18 @@ export const useAppStore = create<AppState>()((set, get) => ({
       set({ selectedMicId: id })
    },
 
+   setRecordingShortcut: shortcut => {
+      localStorage.setItem(STORAGE_KEYS.RECORDING_SHORTCUT, JSON.stringify(shortcut))
+      set({ recordingShortcut: shortcut })
+   },
+
    checkSetup: async () => {
       set({ checkingWhisper: true })
       try {
          const result = await invoke<CheckResult>('check_whisper')
          set({ whisperStatus: result })
          if (result.ready) {
-            get().setStatus('Ready — click button or press spacebar to record', 'idle')
+            get().setStatus('Ready — click the button or use your shortcut to record', 'idle')
          }
       } catch {
          set({ whisperStatus: null })

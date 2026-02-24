@@ -1,21 +1,107 @@
+import { useEffect, useState } from 'react'
+
+import { useAppStore } from '@/stores/useAppStore'
+import { DEFAULT_RECORDING_SHORTCUT, formatShortcut } from '@/shared/types'
+import type { KeyShortcut } from '@/shared/types'
+
 import s from './ShortcutsTab.module.scss'
 
-const shortcuts = [
-   { key: 'Space', description: 'Start / stop recording' },
-   { key: 'Click', description: 'Copy transcript block to clipboard' },
-]
+const MODIFIER_CODES = new Set(['ControlLeft', 'ControlRight', 'ShiftLeft', 'ShiftRight', 'AltLeft', 'AltRight', 'MetaLeft', 'MetaRight'])
 
 export function ShortcutsTab() {
+   const { recordingShortcut, setRecordingShortcut } = useAppStore()
+   const [isCapturing, setIsCapturing] = useState(false)
+   const [pending, setPending] = useState<KeyShortcut | null>(null)
+
+   const startCapture = () => {
+      setIsCapturing(true)
+      setPending(null)
+   }
+
+   const cancelCapture = () => {
+      setIsCapturing(false)
+      setPending(null)
+   }
+
+   const saveShortcut = () => {
+      if (pending) setRecordingShortcut(pending)
+      setIsCapturing(false)
+      setPending(null)
+   }
+
+   const resetToDefault = () => {
+      setRecordingShortcut(DEFAULT_RECORDING_SHORTCUT)
+      setIsCapturing(false)
+      setPending(null)
+   }
+
+   useEffect(() => {
+      if (!isCapturing) return
+
+      const onKeyDown = (e: KeyboardEvent) => {
+         e.preventDefault()
+         if (MODIFIER_CODES.has(e.code)) return
+         setPending({
+            code: e.code,
+            ctrl: e.ctrlKey,
+            shift: e.shiftKey,
+            alt: e.altKey,
+            meta: e.metaKey,
+         })
+      }
+
+      document.addEventListener('keydown', onKeyDown)
+      return () => document.removeEventListener('keydown', onKeyDown)
+   }, [isCapturing])
+
    return (
       <div className={s.container}>
          <h2 className={s.heading}>Keyboard Shortcuts</h2>
          <ul className={s.list}>
-            {shortcuts.map(({ key, description }) => (
-               <li key={key} className={s.item}>
-                  <kbd className={s.key}>{key}</kbd>
-                  <span className={s.description}>{description}</span>
-               </li>
-            ))}
+            <li className={s.item}>
+               <div className={s.itemLeft}>
+                  <span className={s.description}>Toggle recording</span>
+                  {isCapturing ? (
+                     <div className={s.captureZone}>
+                        {pending ? (
+                           <kbd className={s.key}>{formatShortcut(pending)}</kbd>
+                        ) : (
+                           <span className={s.captureHint}>Press a key combination…</span>
+                        )}
+                     </div>
+                  ) : (
+                     <kbd className={s.key}>{formatShortcut(recordingShortcut)}</kbd>
+                  )}
+               </div>
+               <div className={s.itemActions}>
+                  {isCapturing ? (
+                     <>
+                        <button className={s.btn} onClick={saveShortcut} disabled={!pending}>
+                           Save
+                        </button>
+                        <button className={s.btnGhost} onClick={cancelCapture}>
+                           Cancel
+                        </button>
+                     </>
+                  ) : (
+                     <>
+                        <button className={s.btn} onClick={startCapture}>
+                           Change
+                        </button>
+                        <button className={s.btnGhost} onClick={resetToDefault}>
+                           Reset
+                        </button>
+                     </>
+                  )}
+               </div>
+            </li>
+
+            <li className={s.item}>
+               <div className={s.itemLeft}>
+                  <span className={s.description}>Copy transcript block</span>
+                  <kbd className={s.key}>Click</kbd>
+               </div>
+            </li>
          </ul>
       </div>
    )
