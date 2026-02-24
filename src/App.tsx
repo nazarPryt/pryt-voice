@@ -12,6 +12,7 @@ import { SettingsTab } from '@/components/SettingsTab'
 import { ShortcutsTab } from '@/components/ShortcutsTab'
 import { useRecorder } from '@/hooks/useRecorder'
 import { formatShortcut } from '@/shared/utils/shortcut'
+import { playStartSound, playStopSound } from '@/shared/utils/sounds'
 import { useAppStore } from '@/stores/useAppStore'
 
 import s from './App.module.scss'
@@ -46,11 +47,13 @@ export function App() {
          setStatus('Starting mic...', 'recording')
          try {
             await startRecording(selectedMicId || undefined)
+            playStartSound()
             setStatus('Recording — click again to stop', 'recording')
          } catch (err) {
             setStatus(`Mic error: ${(err as Error).message}`, 'error')
          }
       } else {
+         playStopSound()
          setStatus('Transcribing...', 'processing')
          try {
             const samples = await stopRecording()
