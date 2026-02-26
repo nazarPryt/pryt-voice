@@ -6,6 +6,10 @@ import { initialDataState, useAppStore } from '@/stores/useAppStore'
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
+// Capture event listeners so tests can fire Rust events.
+type ListenCallback = (event: { payload: unknown }) => void
+const listenHandlers: Record<string, ListenCallback[]> = {}
+
 vi.mock('@tauri-apps/api/core', () => ({
    invoke: vi.fn(),
 }))
@@ -15,28 +19,23 @@ vi.mock('@tauri-apps/plugin-clipboard-manager', () => ({
 }))
 
 vi.mock('@tauri-apps/api/event', () => ({
-   listen: vi.fn().mockResolvedValue(vi.fn()),
+   listen: vi.fn().mockImplementation((event: string, cb: ListenCallback) => {
+      listenHandlers[event] = listenHandlers[event] ?? []
+      listenHandlers[event].push(cb)
+      return Promise.resolve(() => {
+         listenHandlers[event] = listenHandlers[event].filter(h => h !== cb)
+      })
+   }),
 }))
-
-vi.mock('@/recorder', () => {
-   class AudioRecorder {
-      start = vi.fn().mockResolvedValue(undefined)
-      stop = vi.fn().mockResolvedValue(new Float32Array([0.1, 0.2, 0.3]))
-      destroy = vi.fn().mockResolvedValue(undefined)
-   }
-
-   return {
-      AudioRecorder,
-      enumerateMicrophones: vi
-         .fn()
-         .mockResolvedValue([{ deviceId: 'mic-1', kind: 'audioinput', label: 'Built-in Mic', groupId: 'group-1' }]),
-   }
-})
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const { invoke } = await import('@tauri-apps/api/core')
 const mockInvoke = vi.mocked(invoke)
+
+function emit(event: string, payload: unknown = undefined) {
+   listenHandlers[event]?.forEach(cb => cb({ payload }))
+}
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
@@ -44,92 +43,76 @@ describe('Recording flow', () => {
    beforeEach(() => {
       useAppStore.setState(initialDataState)
       mockInvoke.mockReset()
+      // Clear handlers between tests
+      Object.keys(listenHandlers).forEach(k => delete listenHandlers[k])
+
       mockInvoke.mockImplementation((cmd: string) => {
          if (cmd === 'check_whisper') return Promise.resolve({ ready: true, missing: [] })
-         if (cmd === 'transcribe')
-            return Promise.resolve([{ text: 'Hello world', start: '00:00:00.000', end: '00:00:01.500' }])
+         if (cmd === 'list_audio_devices')
+            return Promise.resolve([{ id: 'hw:0,0', name: 'Built-in Mic' }])
          return Promise.resolve(undefined)
       })
    })
 
    it('record button is initially disabled, then enables once whisper and mic are ready', async () => {
       const screen = await render(<App />)
-
       await expect.element(screen.getByTestId('record-btn')).not.toBeDisabled()
       expect(mockInvoke).toHaveBeenCalledWith('check_whisper')
    })
 
-   it('shows transcript text after record → stop cycle', async () => {
+   it('shows transcript text after Rust emits transcription-result', async () => {
       const screen = await render(<App />)
-      const btn = screen.getByTestId('record-btn')
+      await expect.element(screen.getByTestId('record-btn')).not.toBeDisabled()
 
-      await expect.element(btn).not.toBeDisabled()
-
-      await btn.click() // start recording
-      await btn.click() // stop + transcribe
+      emit('recording-started')
+      emit('recording-stopping')
+      emit('transcription-result', [{ text: 'Hello world', start: '00:00:00.000', end: '00:00:01.500' }])
 
       await expect.element(screen.getByText('Hello world')).toBeVisible()
    })
 
    it('status bar reflects state transitions throughout the flow', async () => {
       const screen = await render(<App />)
-      const btn = screen.getByTestId('record-btn')
+      await expect.element(screen.getByTestId('record-btn')).not.toBeDisabled()
 
-      await expect.element(btn).not.toBeDisabled()
-
-      await btn.click()
+      // Button click starts recording via invoke
+      await screen.getByTestId('record-btn').click()
       await expect.element(screen.getByText('Recording — click again to stop')).toBeVisible()
 
-      await btn.click()
+      // Rust signals stop
+      emit('recording-stopping')
+      await expect.element(screen.getByText('Transcribing...')).toBeVisible()
+
+      // Rust emits result
+      emit('transcription-result', [{ text: 'Done', start: '00:00:00.000', end: '00:00:01.000' }])
       await expect.element(screen.getByText('Ready', { exact: true })).toBeVisible()
    })
 
-   it('each recording creates a new transcript group', async () => {
-      mockInvoke.mockImplementation((cmd: string) => {
-         if (cmd === 'check_whisper') return Promise.resolve({ ready: true, missing: [] })
-         if (cmd === 'transcribe')
-            return Promise.resolve([{ text: 'First recording', start: '00:00:00.000', end: '00:00:01.000' }])
-         return Promise.resolve(undefined)
-      })
-
+   it('each transcription-result event creates a new transcript group', async () => {
       const screen = await render(<App />)
-      const btn = screen.getByTestId('record-btn')
+      await expect.element(screen.getByTestId('record-btn')).not.toBeDisabled()
 
-      await expect.element(btn).not.toBeDisabled()
-
-      await btn.click()
-      await btn.click()
+      emit('recording-started')
+      emit('recording-stopping')
+      emit('transcription-result', [{ text: 'First recording', start: '00:00:00.000', end: '00:00:01.000' }])
       await expect.element(screen.getByText('First recording')).toBeVisible()
 
-      mockInvoke.mockImplementation((cmd: string) => {
-         if (cmd === 'check_whisper') return Promise.resolve({ ready: true, missing: [] })
-         if (cmd === 'transcribe')
-            return Promise.resolve([{ text: 'Second recording', start: '00:00:00.000', end: '00:00:02.000' }])
-         return Promise.resolve(undefined)
-      })
-
-      await btn.click()
-      await btn.click()
+      emit('recording-started')
+      emit('recording-stopping')
+      emit('transcription-result', [{ text: 'Second recording', start: '00:00:00.000', end: '00:00:02.000' }])
 
       await expect.element(screen.getByText('First recording')).toBeVisible()
       await expect.element(screen.getByText('Second recording')).toBeVisible()
    })
 
-   it('shows error status when transcription fails', async () => {
-      mockInvoke.mockImplementation((cmd: string) => {
-         if (cmd === 'check_whisper') return Promise.resolve({ ready: true, missing: [] })
-         if (cmd === 'transcribe') return Promise.reject(new Error('whisper-cli crashed'))
-         return Promise.resolve(undefined)
-      })
-
+   it('shows error status when Rust emits transcription-error', async () => {
       const screen = await render(<App />)
-      const btn = screen.getByTestId('record-btn')
+      await expect.element(screen.getByTestId('record-btn')).not.toBeDisabled()
 
-      await expect.element(btn).not.toBeDisabled()
+      emit('recording-started')
+      emit('recording-stopping')
+      emit('transcription-error', 'whisper-cli crashed')
 
-      await btn.click()
-      await btn.click()
-
-      await expect.element(screen.getByText(/Transcription error.*whisper-cli crashed/)).toBeVisible()
+      await expect.element(screen.getByText(/Error.*whisper-cli crashed/)).toBeVisible()
    })
 })

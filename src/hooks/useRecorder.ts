@@ -1,31 +1,28 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useState } from 'react'
 
-import { AudioRecorder } from '@/recorder'
+import { invoke } from '@tauri-apps/api/core'
 
 export function useRecorder() {
-   const recorderRef = useRef<AudioRecorder>(new AudioRecorder())
    const [isRecording, setIsRecording] = useState(false)
    const [isBusy, setIsBusy] = useState(false)
 
    const startRecording = useCallback(async (deviceId?: string): Promise<void> => {
       setIsBusy(true)
       try {
-         await recorderRef.current.start(deviceId)
+         await invoke('start_recording', { deviceName: deviceId || null })
          setIsRecording(true)
       } finally {
          setIsBusy(false)
       }
    }, [])
 
-   const stopRecording = useCallback(async (): Promise<Float32Array> => {
+   const stopRecording = useCallback(async (): Promise<void> => {
       setIsBusy(true)
       try {
-         const samples = await recorderRef.current.stop()
+         // Fire-and-forget: results arrive via 'transcription-result' event
+         await invoke('stop_recording')
          setIsRecording(false)
-         return samples
       } finally {
-         await recorderRef.current.destroy()
-         recorderRef.current = new AudioRecorder()
          setIsBusy(false)
       }
    }, [])

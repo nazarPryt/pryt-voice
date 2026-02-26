@@ -1,7 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 import { create } from 'zustand'
 
-import { enumerateMicrophones } from '@/recorder'
 import { STORAGE_KEYS } from '@/shared/storageKeys'
 import { DEFAULT_RECORDING_SHORTCUT } from '@/shared/types'
 import type { CheckResult, KeyShortcut, Segment } from '@/shared/types'
@@ -28,12 +27,12 @@ interface AppState {
    isCapturingShortcut: boolean
    // Actions
    setStatus: (text: string, type?: StatusType) => void
-   setSelectedMicId: (id: string) => void
+   setSelectedMicId: (id: string) => Promise<void>
    setRecordingShortcut: (shortcut: KeyShortcut) => void
    setIsCapturingShortcut: (capturing: boolean) => void
    checkSetup: () => Promise<void>
    populateMics: () => Promise<void>
-   transcribe: (audioData: Float32Array) => Promise<Segment[]>
+   addGroup: (segments: Segment[]) => void
 }
 
 function loadRecordingShortcut(): KeyShortcut {
@@ -65,9 +64,10 @@ export const useAppStore = create<AppState>()((set, get) => ({
 
    setStatus: (text, type = 'idle') => set({ statusText: text, statusType: type }),
 
-   setSelectedMicId: id => {
+   setSelectedMicId: async id => {
       localStorage.setItem(STORAGE_KEYS.SELECTED_MIC_ID, id)
       set({ selectedMicId: id })
+      await invoke('set_recording_device', { deviceName: id || null })
    },
 
    setRecordingShortcut: shortcut => {
@@ -95,18 +95,30 @@ export const useAppStore = create<AppState>()((set, get) => ({
    populateMics: async () => {
       set({ micsLoading: true })
       try {
-         const devices = await enumerateMicrophones()
-         set({ mics: devices })
+         const devices = await invoke<Array<{ id: string; name: string }>>('list_audio_devices')
          if (devices.length === 0) {
             get().setStatus('No microphones detected', 'error')
+            set({ micsLoading: false })
             return
          }
+         // Map to MediaDeviceInfo shape for minimal UI changes
+         const mics = devices.map(
+            d =>
+               ({
+                  deviceId: d.id,
+                  label: d.name,
+                  kind: 'audioinput' as MediaDeviceKind,
+                  groupId: '',
+                  toJSON: () => ({}),
+               }) as MediaDeviceInfo,
+         )
+         set({ mics })
          const saved = localStorage.getItem(STORAGE_KEYS.SELECTED_MIC_ID)
-         const isAvailable = saved && devices.some(d => d.deviceId === saved)
+         const isAvailable = saved && devices.some(d => d.id === saved)
          if (isAvailable) {
             set({ selectedMicId: saved })
          } else if (!get().selectedMicId) {
-            set({ selectedMicId: devices[0].deviceId })
+            set({ selectedMicId: devices[0].id })
          }
       } catch (err) {
          get().setStatus(`Mic enumerate error: ${(err as Error).message}`, 'error')
@@ -115,19 +127,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
       }
    },
 
-   transcribe: async (audioData: Float32Array): Promise<Segment[]> => {
-      set({ isProcessing: true, errorMessage: null })
-      try {
-         const result = await invoke<Segment[]>('transcribe', { audioData: Array.from(audioData) })
-         if (result.length > 0) {
-            set(state => ({ groups: [...state.groups, result] }))
-         }
-         set({ isProcessing: false })
-         return result
-      } catch (err) {
-         const msg = err instanceof Error ? err.message : String(err)
-         set({ errorMessage: msg, isProcessing: false })
-         throw err
-      }
+   addGroup: (segments: Segment[]) => {
+      set(state => ({ groups: [...state.groups, segments] }))
    },
 }))

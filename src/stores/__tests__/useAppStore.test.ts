@@ -6,14 +6,8 @@ vi.mock('@tauri-apps/api/core', () => ({
    invoke: vi.fn(),
 }))
 
-vi.mock('@/recorder', () => ({
-   enumerateMicrophones: vi.fn(),
-}))
-
 const { invoke } = await import('@tauri-apps/api/core')
-const { enumerateMicrophones } = await import('@/recorder')
 const mockInvoke = vi.mocked(invoke)
-const mockEnumerateMicrophones = vi.mocked(enumerateMicrophones)
 
 const seg = (text: string) => ({ start: '00:00:00.000', end: '00:00:01.000', text })
 
@@ -21,78 +15,25 @@ describe('useAppStore', () => {
    beforeEach(() => {
       useAppStore.setState(initialDataState)
       mockInvoke.mockReset()
-      mockEnumerateMicrophones.mockReset()
    })
 
-   describe('transcribe', () => {
-      it('starts with empty groups, not processing, no error', () => {
-         const state = useAppStore.getState()
-         expect(state.groups).toEqual([])
-         expect(state.isProcessing).toBe(false)
-         expect(state.errorMessage).toBeNull()
+   describe('addGroup', () => {
+      it('starts with empty groups', () => {
+         expect(useAppStore.getState().groups).toEqual([])
       })
 
-      it('adds a group when transcription returns segments', async () => {
+      it('adds a group of segments', () => {
          const segments = [seg('Hello world')]
-         mockInvoke.mockResolvedValue(segments)
-
-         await useAppStore.getState().transcribe(new Float32Array([0.1, 0.2]))
-
+         useAppStore.getState().addGroup(segments)
          expect(useAppStore.getState().groups).toHaveLength(1)
          expect(useAppStore.getState().groups[0]).toEqual(segments)
       })
 
-      it('each call creates a separate group', async () => {
-         mockInvoke.mockResolvedValueOnce([seg('First')]).mockResolvedValueOnce([seg('Second')])
-
-         await useAppStore.getState().transcribe(new Float32Array([0.1]))
-         await useAppStore.getState().transcribe(new Float32Array([0.2]))
-
+      it('each call creates a separate group', () => {
+         useAppStore.getState().addGroup([seg('First')])
+         useAppStore.getState().addGroup([seg('Second')])
          expect(useAppStore.getState().groups).toHaveLength(2)
          expect(useAppStore.getState().groups[1][0].text).toBe('Second')
-      })
-
-      it('does not add a group when result is empty', async () => {
-         mockInvoke.mockResolvedValue([])
-
-         await useAppStore.getState().transcribe(new Float32Array([0.1]))
-
-         expect(useAppStore.getState().groups).toHaveLength(0)
-      })
-
-      it('passes audioData as a plain array to invoke', async () => {
-         mockInvoke.mockResolvedValue([])
-
-         await useAppStore.getState().transcribe(new Float32Array([0.5, -0.5, 1.0]))
-
-         expect(mockInvoke).toHaveBeenCalledWith('transcribe', {
-            audioData: [0.5, -0.5, 1.0],
-         })
-      })
-
-      it('sets errorMessage on failure', async () => {
-         mockInvoke.mockRejectedValueOnce(new Error('whisper-cli not found'))
-
-         await useAppStore
-            .getState()
-            .transcribe(new Float32Array([0.1]))
-            .catch(() => {})
-
-         expect(useAppStore.getState().errorMessage).toBe('whisper-cli not found')
-         expect(useAppStore.getState().isProcessing).toBe(false)
-      })
-
-      it('clears errorMessage on next successful call', async () => {
-         mockInvoke.mockRejectedValueOnce(new Error('first fail')).mockResolvedValueOnce([seg('Recovery')])
-
-         await useAppStore
-            .getState()
-            .transcribe(new Float32Array([0.1]))
-            .catch(() => {})
-         await useAppStore.getState().transcribe(new Float32Array([0.2]))
-
-         expect(useAppStore.getState().errorMessage).toBeNull()
-         expect(useAppStore.getState().groups).toHaveLength(1)
       })
    })
 
@@ -117,22 +58,40 @@ describe('useAppStore', () => {
    })
 
    describe('populateMics', () => {
-      it('sets mics on success', async () => {
-         const fakeDevices = [{ deviceId: 'mic1', label: 'Mic 1' }] as MediaDeviceInfo[]
-         mockEnumerateMicrophones.mockResolvedValue(fakeDevices)
+      it('sets mics from list_audio_devices', async () => {
+         mockInvoke.mockResolvedValue([
+            { id: 'hw:0,0', name: 'Built-in Mic' },
+            { id: 'hw:1,0', name: 'USB Mic' },
+         ])
 
          await useAppStore.getState().populateMics()
 
-         expect(useAppStore.getState().mics).toEqual(fakeDevices)
+         const mics = useAppStore.getState().mics
+         expect(mics).toHaveLength(2)
+         expect(mics[0].deviceId).toBe('hw:0,0')
+         expect(mics[0].label).toBe('Built-in Mic')
       })
 
       it('sets error status when no mics found', async () => {
-         mockEnumerateMicrophones.mockResolvedValue([])
+         mockInvoke.mockResolvedValue([])
 
          await useAppStore.getState().populateMics()
 
          expect(useAppStore.getState().mics).toHaveLength(0)
          expect(useAppStore.getState().statusType).toBe('error')
+      })
+
+      it('selects saved mic if still available', async () => {
+         localStorage.setItem('selectedMicId', 'hw:1,0')
+         mockInvoke.mockResolvedValue([
+            { id: 'hw:0,0', name: 'Built-in Mic' },
+            { id: 'hw:1,0', name: 'USB Mic' },
+         ])
+
+         await useAppStore.getState().populateMics()
+
+         expect(useAppStore.getState().selectedMicId).toBe('hw:1,0')
+         localStorage.removeItem('selectedMicId')
       })
    })
 
