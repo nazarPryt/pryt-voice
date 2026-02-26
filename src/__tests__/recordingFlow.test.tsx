@@ -48,8 +48,7 @@ describe('Recording flow', () => {
 
       mockInvoke.mockImplementation((cmd: string) => {
          if (cmd === 'check_whisper') return Promise.resolve({ ready: true, missing: [] })
-         if (cmd === 'list_audio_devices')
-            return Promise.resolve([{ id: 'hw:0,0', name: 'Built-in Mic' }])
+         if (cmd === 'list_audio_devices') return Promise.resolve([{ id: 'hw:0,0', name: 'Built-in Mic' }])
          return Promise.resolve(undefined)
       })
    })

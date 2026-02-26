@@ -63,6 +63,7 @@ fn stop_recording(app: tauri::AppHandle) -> Result<(), String> {
                 let _ = app_clone.emit("transcription-error", e);
             }
         }
+        hide_widget_delayed(app_clone);
     });
     Ok(())
 }
@@ -116,6 +117,7 @@ fn register_shortcut(app: tauri::AppHandle, shortcut: String) -> Result<(), Stri
                             let _ = app2.emit("transcription-error", e);
                         }
                     }
+                    hide_widget_delayed(app2);
                 });
             } else {
                 // Start recording.
@@ -123,6 +125,7 @@ fn register_shortcut(app: tauri::AppHandle, shortcut: String) -> Result<(), Stri
                 match audio_state.start(mic) {
                     Ok(_) => {
                         let _ = app_handle.emit("recording-started", ());
+                        show_widget_window(&app_handle);
                     }
                     Err(e) => {
                         let _ = app_handle.emit("transcription-error", e);
@@ -133,6 +136,51 @@ fn register_shortcut(app: tauri::AppHandle, shortcut: String) -> Result<(), Stri
         .map_err(|e| e.to_string())?;
 
     Ok(())
+}
+
+fn create_widget_window(app: &mut tauri::App) -> Result<(), tauri::Error> {
+    let widget_url = if cfg!(debug_assertions) {
+        tauri::WebviewUrl::External("http://localhost:1420/widget.html".parse().unwrap())
+    } else {
+        tauri::WebviewUrl::App("widget.html".into())
+    };
+
+    let window = tauri::WebviewWindowBuilder::new(app, "widget", widget_url)
+        .title("Pryt Voice Widget")
+        .inner_size(200.0, 52.0)
+        .decorations(false)
+        .always_on_top(true)
+        .transparent(true)
+        .resizable(false)
+        .visible(false)
+        .skip_taskbar(true)
+        .build()?;
+
+    // Position at bottom-center of the primary monitor.
+    if let Ok(Some(monitor)) = window.primary_monitor() {
+        let size = monitor.size();
+        let pos = monitor.position();
+        let x = pos.x + (size.width as i32 - 200) / 2;
+        let y = pos.y + size.height as i32 - 52 - 48;
+        let _ = window.set_position(tauri::PhysicalPosition::new(x, y));
+    }
+
+    Ok(())
+}
+
+fn show_widget_window(app: &tauri::AppHandle) {
+    if let Some(w) = app.get_webview_window("widget") {
+        let _ = w.show();
+    }
+}
+
+fn hide_widget_delayed(app: tauri::AppHandle) {
+    std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_millis(1500));
+        if let Some(w) = app.get_webview_window("widget") {
+            let _ = w.hide();
+        }
+    });
 }
 
 fn main() {
@@ -149,7 +197,10 @@ fn main() {
             stop_recording,
             set_recording_device,
         ])
-        .setup(|_app| Ok(()))
+        .setup(|app| {
+            create_widget_window(app)?;
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

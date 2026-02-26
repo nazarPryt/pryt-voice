@@ -11,10 +11,10 @@ import { OverviewTab } from '@/components/OverviewTab'
 import { SettingsTab } from '@/components/SettingsTab'
 import { ShortcutsTab } from '@/components/ShortcutsTab'
 import { useRecorder } from '@/hooks/useRecorder'
+import type { Segment } from '@/shared/types'
 import { formatShortcut } from '@/shared/utils/shortcut'
 import { playStartSound, playStopSound } from '@/shared/utils/sounds'
 import { useAppStore } from '@/stores/useAppStore'
-import type { Segment } from '@/shared/types'
 
 import s from './App.module.scss'
 

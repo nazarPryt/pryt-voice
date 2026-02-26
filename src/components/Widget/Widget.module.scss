@@ -1,0 +1,83 @@
+.widget {
+   cursor: grab;
+   user-select: none;
+
+   display: flex;
+   gap: 8px;
+   align-items: center;
+
+   width: 200px;
+   height: 52px;
+   padding: 0 18px;
+   border: 1px solid rgba(255, 255, 255, 0.07);
+   border-radius: 26px;
+
+   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+   background: rgba(22, 22, 42, 0.94);
+
+   &:active {
+      cursor: grabbing;
+   }
+}
+
+.dot {
+   flex-shrink: 0;
+   width: 10px;
+   height: 10px;
+   border-radius: 50%;
+
+   [data-state='recording'] & {
+      background: #ef4444;
+      animation: pulse 1.2s ease-in-out infinite;
+   }
+
+   [data-state='processing'] & {
+      width: 11px;
+      height: 11px;
+      border: 2px solid rgba(99, 102, 241, 0.25);
+      border-top-color: #818cf8;
+
+      background: transparent;
+
+      animation: spin 0.75s linear infinite;
+   }
+
+   [data-state='done'] & {
+      background: #10b981;
+   }
+}
+
+.appName {
+   flex-shrink: 0;
+
+   font-size: 12px;
+   font-weight: 700;
+   color: #7c3aed;
+   letter-spacing: 0.02em;
+}
+
+.label {
+   font-size: 13px;
+   font-weight: 400;
+   color: rgba(224, 224, 224, 0.85);
+   white-space: nowrap;
+}
+
+@keyframes pulse {
+   0%,
+   100% {
+      transform: scale(1);
+      opacity: 1;
+   }
+   50% {
+      transform: scale(0.7);
+      opacity: 0.35;
+   }
+}
+
+@keyframes spin {
+   to {
+      transform: rotate(360deg);
+   }
+}

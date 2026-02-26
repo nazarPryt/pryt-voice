@@ -10,5 +10,14 @@ export default defineConfig({
    clearScreen: false,
    server: { port: 1420, strictPort: true },
    envPrefix: ['VITE_', 'TAURI_'],
-   build: { target: 'chrome105', outDir: 'dist' },
+   build: {
+      target: 'chrome105',
+      outDir: 'dist',
+      rollupOptions: {
+         input: {
+            main: resolve(__dirname, 'index.html'),
+            widget: resolve(__dirname, 'widget.html'),
+         },
+      },
+   },
 })

@@ -5,12 +5,7 @@ function getCtx(): AudioContext {
    return ctx
 }
 
-function playTone(
-   frequency: number,
-   startTime: number,
-   duration: number,
-   gainValue = 1.0,
-): void {
+function playTone(frequency: number, startTime: number, duration: number, gainValue = 1.0): void {
    const audioCtx = getCtx()
    const oscillator = audioCtx.createOscillator()
    const gainNode = audioCtx.createGain()
