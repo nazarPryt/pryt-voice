@@ -32,6 +32,7 @@ export function App() {
       mics,
       selectedMicId,
       recordingShortcut,
+      autoPaste,
       setStatus,
       checkSetup,
       populateMics,
@@ -81,6 +82,11 @@ export function App() {
       checkSetup()
       populateMics()
    }, [checkSetup, populateMics])
+
+   // Sync auto-paste setting to Rust on mount (Rust state resets on each launch).
+   useEffect(() => {
+      invoke('set_auto_paste', { enabled: autoPaste }).catch(() => {})
+   }, [autoPaste])
 
    // Register the global (OS-level) shortcut whenever it changes.
    useEffect(() => {

@@ -5,9 +5,128 @@ mod audio;
 mod model_manager;
 mod whisper;
 
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Mutex,
+};
+
 use audio::{list_audio_devices as do_list_devices, AudioDevice, AudioState};
 use model_manager::{check_whisper_ready, CheckResult};
 use tauri::Manager;
+
+// ---------------------------------------------------------------------------
+// Paste state — tracks the auto-paste toggle and the window that was active
+// when recording started so we can restore focus before pasting.
+// ---------------------------------------------------------------------------
+
+struct PasteState {
+    auto_paste: AtomicBool,
+    saved_window: Mutex<Option<u64>>,
+}
+
+impl PasteState {
+    fn new() -> Self {
+        Self {
+            auto_paste: AtomicBool::new(false),
+            saved_window: Mutex::new(None),
+        }
+    }
+
+    fn is_enabled(&self) -> bool {
+        self.auto_paste.load(Ordering::Relaxed)
+    }
+
+    fn set_enabled(&self, val: bool) {
+        self.auto_paste.store(val, Ordering::Relaxed);
+    }
+
+    fn save_window(&self) {
+        if let Ok(mut w) = self.saved_window.lock() {
+            *w = get_active_window();
+        }
+    }
+
+    fn take_window(&self) -> Option<u64> {
+        self.saved_window.lock().ok().and_then(|mut w| w.take())
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Helper functions
+// ---------------------------------------------------------------------------
+
+/// Returns the X11 window ID of the currently focused window using xdotool.
+/// Returns None on Wayland-only sessions (no DISPLAY) or if xdotool is absent.
+fn get_active_window() -> Option<u64> {
+    if std::env::var("DISPLAY").is_err() {
+        return None;
+    }
+    let output = std::process::Command::new("xdotool")
+        .args(["getactivewindow"])
+        .output()
+        .ok()?;
+    String::from_utf8(output.stdout).ok()?.trim().parse().ok()
+}
+
+/// Joins segment texts into a single string.
+fn segments_to_text(segments: &[whisper::Segment]) -> String {
+    segments
+        .iter()
+        .map(|s| s.text.trim())
+        .filter(|t| !t.is_empty())
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+/// Copies `text` to the system clipboard and, if `paste` is true, simulates
+/// Ctrl+V in the window identified by `saved_window` (or the current focused
+/// window if None). Blocks the calling thread with short sleeps to give the
+/// target application time to read the clipboard content.
+///
+/// Must be called from a dedicated std::thread (not the tokio runtime) because
+/// it contains blocking sleeps.
+fn copy_and_maybe_paste(text: &str, paste: bool, saved_window: Option<u64>) {
+    #[cfg(target_os = "linux")]
+    {
+        use arboard::Clipboard;
+
+        let Ok(mut ctx) = Clipboard::new() else { return };
+        let Ok(()) = ctx.set_text(text.to_string()) else { return };
+
+        if paste && std::env::var("DISPLAY").is_ok() {
+            // Small delay so clipboard content is fully committed before the
+            // target application attempts to read it.
+            std::thread::sleep(std::time::Duration::from_millis(50));
+
+            do_xdotool_paste(saved_window);
+
+            // Keep the arboard Clipboard alive while the target app reads the
+            // selection; once we drop ctx the content is released (or handed off
+            // to a clipboard manager if one is running).
+            std::thread::sleep(std::time::Duration::from_millis(400));
+        }
+        // ctx drops here — content persists via clipboard manager if available.
+    }
+}
+
+/// Simulates Ctrl+V via xdotool. If `window_id` is Some, focuses that window
+/// first; otherwise sends the key to whatever window currently has focus.
+fn do_xdotool_paste(window_id: Option<u64>) {
+    if let Some(id) = window_id {
+        let id_str = id.to_string();
+        let _ = std::process::Command::new("xdotool")
+            .args(["windowfocus", "--sync", &id_str, "key", "--clearmodifiers", "ctrl+v"])
+            .output();
+    } else {
+        let _ = std::process::Command::new("xdotool")
+            .args(["key", "--clearmodifiers", "ctrl+v"])
+            .output();
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Tauri commands
+// ---------------------------------------------------------------------------
 
 #[tauri::command]
 fn check_whisper(app: tauri::AppHandle) -> Result<CheckResult, String> {
@@ -52,7 +171,15 @@ fn stop_recording(app: tauri::AppHandle) -> Result<(), String> {
                 let _ = app_clone.emit("recording-stopped", ());
                 match whisper::transcribe(&app_clone, samples) {
                     Ok(segments) => {
+                        let text = segments_to_text(&segments);
                         let _ = app_clone.emit("transcription-result", &segments);
+                        // Auto-copy to clipboard (no auto-paste: UI button means
+                        // the Tauri window has focus, not an external editor).
+                        if !text.is_empty() {
+                            std::thread::spawn(move || {
+                                copy_and_maybe_paste(&text, false, None);
+                            });
+                        }
                     }
                     Err(e) => {
                         let _ = app_clone.emit("transcription-error", e);
@@ -75,6 +202,12 @@ fn set_recording_device(
 ) -> Result<(), String> {
     state.set_device(device_name);
     Ok(())
+}
+
+/// Called by the frontend to sync the auto-paste toggle to Rust state.
+#[tauri::command]
+fn set_auto_paste(state: tauri::State<'_, PasteState>, enabled: bool) {
+    state.set_enabled(enabled);
 }
 
 #[tauri::command]
@@ -106,7 +239,17 @@ fn register_shortcut(app: tauri::AppHandle, shortcut: String) -> Result<(), Stri
                             let _ = app2.emit("recording-stopped", ());
                             match whisper::transcribe(&app2, samples) {
                                 Ok(segments) => {
+                                    let text = segments_to_text(&segments);
                                     let _ = app2.emit("transcription-result", &segments);
+                                    if !text.is_empty() {
+                                        let paste_state = app2.state::<PasteState>();
+                                        let should_paste = paste_state.is_enabled();
+                                        let saved_window =
+                                            if should_paste { paste_state.take_window() } else { None };
+                                        std::thread::spawn(move || {
+                                            copy_and_maybe_paste(&text, should_paste, saved_window);
+                                        });
+                                    }
                                 }
                                 Err(e) => {
                                     let _ = app2.emit("transcription-error", e);
@@ -120,6 +263,11 @@ fn register_shortcut(app: tauri::AppHandle, shortcut: String) -> Result<(), Stri
                     hide_widget_delayed(app2);
                 });
             } else {
+                // Save the active window BEFORE the widget appears so we can
+                // restore focus to it after transcription completes.
+                let paste_state = app_handle.state::<PasteState>();
+                paste_state.save_window();
+
                 // Start recording.
                 let mic = audio_state.get_device();
                 match audio_state.start(mic) {
@@ -137,6 +285,10 @@ fn register_shortcut(app: tauri::AppHandle, shortcut: String) -> Result<(), Stri
 
     Ok(())
 }
+
+// ---------------------------------------------------------------------------
+// Widget window helpers
+// ---------------------------------------------------------------------------
 
 fn create_widget_window(app: &mut tauri::App) -> Result<(), tauri::Error> {
     let widget_url = if cfg!(debug_assertions) {
@@ -183,9 +335,14 @@ fn hide_widget_delayed(app: tauri::AppHandle) {
     });
 }
 
+// ---------------------------------------------------------------------------
+// Entry point
+// ---------------------------------------------------------------------------
+
 fn main() {
     tauri::Builder::default()
         .manage(AudioState::new())
+        .manage(PasteState::new())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
@@ -196,6 +353,7 @@ fn main() {
             start_recording,
             stop_recording,
             set_recording_device,
+            set_auto_paste,
         ])
         .setup(|app| {
             create_widget_window(app)?;

@@ -25,11 +25,14 @@ interface AppState {
    // Shortcuts
    recordingShortcut: KeyShortcut
    isCapturingShortcut: boolean
+   // Behaviour
+   autoPaste: boolean
    // Actions
    setStatus: (text: string, type?: StatusType) => void
    setSelectedMicId: (id: string) => Promise<void>
    setRecordingShortcut: (shortcut: KeyShortcut) => void
    setIsCapturingShortcut: (capturing: boolean) => void
+   setAutoPaste: (val: boolean) => Promise<void>
    checkSetup: () => Promise<void>
    populateMics: () => Promise<void>
    addGroup: (segments: Segment[]) => void
@@ -57,6 +60,7 @@ export const initialDataState = {
    errorMessage: null,
    recordingShortcut: loadRecordingShortcut(),
    isCapturingShortcut: false,
+   autoPaste: localStorage.getItem(STORAGE_KEYS.AUTO_PASTE) === 'true',
 }
 
 export const useAppStore = create<AppState>()((set, get) => ({
@@ -76,6 +80,12 @@ export const useAppStore = create<AppState>()((set, get) => ({
    },
 
    setIsCapturingShortcut: capturing => set({ isCapturingShortcut: capturing }),
+
+   setAutoPaste: async val => {
+      localStorage.setItem(STORAGE_KEYS.AUTO_PASTE, String(val))
+      set({ autoPaste: val })
+      await invoke('set_auto_paste', { enabled: val })
+   },
 
    checkSetup: async () => {
       set({ checkingWhisper: true })
