@@ -78,13 +78,13 @@ fn segments_to_text(segments: &[whisper::Segment]) -> String {
         .join(" ")
 }
 
-/// Copies `text` to the system clipboard and, if `paste` is true, simulates
-/// Ctrl+V in the window identified by `saved_window` (or the current focused
-/// window if None). Blocks the calling thread with short sleeps to give the
-/// target application time to read the clipboard content.
+/// Copies `text` to the system clipboard (for manual paste later) and, if
+/// `paste` is true, also types it directly into the target window via
+/// `xdotool type`. Direct typing works universally — standalone terminals,
+/// embedded IDE terminals (WebStorm, VS Code), editors, browsers — without
+/// any per-app detection or paste-shortcut guessing.
 ///
-/// Must be called from a dedicated std::thread (not the tokio runtime) because
-/// it contains blocking sleeps.
+/// Must be called from a dedicated std::thread (not the tokio runtime).
 fn copy_and_maybe_paste(text: &str, paste: bool, saved_window: Option<u64>) {
     #[cfg(target_os = "linux")]
     {
@@ -93,33 +93,41 @@ fn copy_and_maybe_paste(text: &str, paste: bool, saved_window: Option<u64>) {
         let Ok(mut ctx) = Clipboard::new() else { return };
         let Ok(()) = ctx.set_text(text.to_string()) else { return };
 
-        if paste && std::env::var("DISPLAY").is_ok() {
-            // Small delay so clipboard content is fully committed before the
-            // target application attempts to read it.
-            std::thread::sleep(std::time::Duration::from_millis(50));
+        // Brief hold so a clipboard manager can capture the content.
+        std::thread::sleep(std::time::Duration::from_millis(100));
+        // ctx drops — clipboard manager takes over if one is running.
+        drop(ctx);
 
-            do_xdotool_paste(saved_window);
-
-            // Keep the arboard Clipboard alive while the target app reads the
-            // selection; once we drop ctx the content is released (or handed off
-            // to a clipboard manager if one is running).
-            std::thread::sleep(std::time::Duration::from_millis(400));
+        if paste {
+            // Type text directly into the target window. This works in
+            // embedded terminals (WebStorm, VS Code), standalone terminals,
+            // editors, and browsers without any app-type detection.
+            do_xdotool_type(text, saved_window);
         }
-        // ctx drops here — content persists via clipboard manager if available.
     }
 }
 
-/// Simulates Ctrl+V via xdotool. If `window_id` is Some, focuses that window
-/// first; otherwise sends the key to whatever window currently has focus.
-fn do_xdotool_paste(window_id: Option<u64>) {
+/// Types `text` directly into `window_id` (or the current focus if None)
+/// using xdotool type. This bypasses clipboard paste entirely, so it works
+/// in embedded terminals (WebStorm, VS Code), standalone terminal emulators,
+/// editors, and browsers — regardless of which paste shortcut each uses.
+fn do_xdotool_type(text: &str, window_id: Option<u64>) {
+    if std::env::var("DISPLAY").is_err() {
+        return;
+    }
     if let Some(id) = window_id {
         let id_str = id.to_string();
+        // windowactivate uses _NET_ACTIVE_WINDOW (WM-friendly); windowfocus
+        // uses XSetInputFocus directly and fails with BadMatch on many apps.
         let _ = std::process::Command::new("xdotool")
-            .args(["windowfocus", "--sync", &id_str, "key", "--clearmodifiers", "ctrl+v"])
+            .args([
+                "windowactivate", "--sync", &id_str,
+                "type", "--clearmodifiers", "--delay", "0", "--", text,
+            ])
             .output();
     } else {
         let _ = std::process::Command::new("xdotool")
-            .args(["key", "--clearmodifiers", "ctrl+v"])
+            .args(["type", "--clearmodifiers", "--delay", "0", "--", text])
             .output();
     }
 }
