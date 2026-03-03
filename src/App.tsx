@@ -33,11 +33,21 @@ export function App() {
       selectedMicId,
       recordingShortcut,
       autoPaste,
+      theme,
       setStatus,
       checkSetup,
       populateMics,
       addGroup,
    } = useAppStore()
+
+   // Apply the selected theme to the document root
+   useEffect(() => {
+      if (theme === 'default') {
+         delete document.documentElement.dataset.theme
+      } else {
+         document.documentElement.dataset.theme = theme
+      }
+   }, [theme])
    const { isBusy, startRecording, stopRecording } = useRecorder()
    const [isRecordingState, setIsRecordingState] = useState(false)
    const [isProcessing, setIsProcessing] = useState(false)

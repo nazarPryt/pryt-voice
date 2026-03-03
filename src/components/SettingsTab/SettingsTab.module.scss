@@ -15,7 +15,10 @@
 .list {
    display: flex;
    flex-direction: column;
-   gap: 10px;
+   gap: var(--settings-list-gap, 10px);
+
+   border: var(--settings-list-border, none);
+
    list-style: none;
 }
 
@@ -26,14 +29,15 @@
    justify-content: space-between;
 
    padding: 12px 14px;
-   border: 1px solid var(--color-border);
-   border-radius: 8px;
+   border: var(--item-border, 1px solid var(--color-border));
+   border-radius: var(--item-border-radius);
 
-   background: var(--color-surface);
+   background: var(--item-bg);
 }
 
 .itemLeft {
    display: flex;
+   flex: 1;
    flex-direction: column;
    gap: 4px;
 }
@@ -50,45 +54,123 @@
    code {
       padding: 1px 4px;
       border-radius: 4px;
+
       font-family: monospace;
       font-size: 0.78rem;
+
       background: var(--color-surface-hover);
    }
 }
 
-// CSS toggle switch
+// ─── Theme picker ─────────────────────────────────────────────────────────────
+.themeGrid {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 6px;
+   justify-content: flex-end;
+}
+
+.themeBtn {
+   cursor: pointer;
+
+   display: flex;
+   flex-direction: column;
+   gap: 5px;
+   align-items: center;
+
+   padding: 8px 10px;
+   border: 1px solid var(--color-border);
+   border-radius: var(--item-border-radius);
+
+   background: transparent;
+
+   transition:
+      border-color 0.15s,
+      background 0.15s;
+
+   &:hover {
+      border-color: var(--color-accent);
+      background: var(--color-surface-hover);
+   }
+}
+
+.themeBtnActive {
+   border-color: var(--color-accent);
+   background: rgba(var(--color-accent-rgb), 0.12);
+}
+
+.themeSwatch {
+   display: block;
+
+   width: 28px;
+   height: 16px;
+   border: 1px solid rgba(255, 255, 255, 0.1);
+   border-radius: 3px;
+}
+
+// Swatch colors per theme
+.swatch_default {
+   background: linear-gradient(135deg, #1a1a2e 50%, #7c3aed 50%);
+}
+.swatch_v1 {
+   background: linear-gradient(135deg, #070706 50%, #d98f2a 50%);
+}
+.swatch_v2 {
+   background: linear-gradient(135deg, #0f0e11 50%, #e8543a 50%);
+}
+.swatch_v3 {
+   background: linear-gradient(135deg, #141210 50%, #d62828 50%);
+}
+
+.themeLabel {
+   font-size: 0.65rem;
+   color: var(--color-text-muted);
+   white-space: nowrap;
+}
+
+// ─── Toggle switch ────────────────────────────────────────────────────────────
 .toggle {
+   cursor: pointer;
+
    position: relative;
+
    display: inline-block;
    flex-shrink: 0;
+
    width: 40px;
    height: 22px;
-   cursor: pointer;
 
    input {
       position: absolute;
-      opacity: 0;
       width: 0;
       height: 0;
+      opacity: 0;
    }
 }
 
 .slider {
    position: absolute;
    inset: 0;
+
    border-radius: 22px;
+
    background: var(--color-border);
+
    transition: background 0.2s;
 
    &::before {
       content: '';
+
       position: absolute;
       top: 3px;
       left: 3px;
+
       width: 16px;
       height: 16px;
       border-radius: 50%;
+
       background: var(--color-text-muted);
+
       transition:
          transform 0.2s,
          background 0.2s;

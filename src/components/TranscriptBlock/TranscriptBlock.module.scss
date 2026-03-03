@@ -4,15 +4,16 @@
 
    position: relative;
 
-   margin-bottom: 12px;
-   padding: 12px 40px 12px 12px;
-   border: 1px solid var(--color-border);
-   border-radius: 8px;
+   margin-bottom: 10px;
+   padding: var(--block-padding);
+   border: var(--block-outer-border);
+   border-left: var(--block-left-border);
+   border-radius: var(--block-border-radius);
 
    font-size: 0.95rem;
    line-height: 1.6;
 
-   background: var(--color-transcript-bg);
+   background: var(--block-bg);
 
    transition:
       border-color 0.2s,
@@ -24,6 +25,7 @@
 
       .copyIcon {
          color: var(--color-accent);
+         opacity: 1;
       }
    }
 
@@ -32,6 +34,7 @@
 
       .copyIcon {
          color: var(--color-success);
+         opacity: 1;
       }
    }
 }
@@ -46,5 +49,9 @@
 
    color: var(--color-text-dim);
 
-   transition: color 0.2s;
+   opacity: 0;
+
+   transition:
+      color 0.2s,
+      opacity 0.2s;
 }

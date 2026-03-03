@@ -10,20 +10,24 @@
    flex-direction: column;
    flex-shrink: 0;
 
-   width: 176px;
-   padding: 20px 12px;
-   border-right: 1px solid var(--color-border);
+   width: var(--sidebar-width);
+   padding: var(--sidebar-padding);
+   border-right: var(--sidebar-border-right);
 
-   background: var(--color-surface);
+   background: var(--sidebar-bg);
 }
 
 .logo {
-   padding: 4px 10px 20px;
+   padding: var(--logo-padding);
+   border-bottom: var(--logo-border-bottom);
 
-   font-size: 1.1rem;
-   font-weight: 600;
-   color: #fff;
-   letter-spacing: -0.02em;
+   font-family: var(--logo-font-family);
+   font-size: var(--logo-font-size);
+   font-weight: var(--logo-font-weight);
+   line-height: var(--logo-line-height);
+   color: var(--logo-color);
+   text-transform: var(--logo-text-transform);
+   letter-spacing: var(--logo-letter-spacing);
 }
 
 .accent {
@@ -34,7 +38,9 @@
    display: flex;
    flex: 1;
    flex-direction: column;
-   gap: 2px;
+   gap: var(--nav-gap);
+
+   padding: var(--nav-padding);
 }
 
 .navItem {
@@ -45,20 +51,25 @@
    align-items: center;
 
    width: 100%;
-   padding: 8px 10px;
+   padding: var(--nav-item-padding);
    border: none;
-   border-radius: 8px;
+   border-left: var(--nav-item-border-left-width) solid transparent;
+   border-radius: var(--nav-item-border-radius);
 
-   font-size: 0.875rem;
+   font-family: inherit;
+   font-size: var(--nav-item-font-size);
    font-weight: 500;
    color: var(--color-text-muted);
    text-align: left;
+   text-transform: var(--nav-item-text-transform);
+   letter-spacing: var(--nav-item-letter-spacing);
 
    background: transparent;
 
    transition:
       background 0.12s,
-      color 0.12s;
+      color 0.12s,
+      border-left-color 0.12s;
 
    &:hover {
       color: var(--color-text);
@@ -66,8 +77,9 @@
    }
 
    &[data-state='active'] {
-      color: var(--color-accent-hover);
-      background: rgb(124 58 237 / 18%);
+      border-left-color: var(--nav-active-border-color);
+      color: var(--nav-active-color);
+      background: var(--nav-active-bg);
    }
 }
 
@@ -80,7 +92,7 @@
    display: block;
 
    padding: 5px 10px;
-   border-radius: 8px;
+   border-radius: var(--badge-border-radius);
 
    font-size: 0.7rem;
    color: var(--color-text-dim);
@@ -89,12 +101,12 @@
 
    &.ready {
       color: var(--color-success);
-      background: rgb(16 185 129 / 12%);
+      background: rgba(var(--color-success-rgb), 0.12);
    }
 
    &.error {
       color: var(--color-error);
-      background: rgb(239 68 68 / 12%);
+      background: rgba(var(--color-error-rgb), 0.12);
    }
 }
 

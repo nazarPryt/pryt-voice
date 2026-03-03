@@ -1,8 +1,12 @@
+// ─── Default theme ────────────────────────────────────────────────────────────
 :root {
+   // Colors
    --color-bg: #1a1a2e;
    --color-surface: #16162a;
+   --color-surface-alt: var(--color-surface);
    --color-surface-hover: #22223c;
    --color-border: #2a2a4a;
+   --color-border-light: var(--color-border);
    --color-text: #e0e0e0;
    --color-text-muted: #888;
    --color-text-dim: #555;
@@ -13,8 +17,390 @@
    --color-warning: #f59e0b;
    --color-transcript-bg: #1e1e38;
    --color-scrollbar-thumb: #3a3a5c;
+   --color-white: #fff;
+   --color-on-accent: var(--color-white);
+   // RGB triplets for rgba()
+   --color-accent-rgb: 124, 58, 237;
+   --color-error-rgb: 239, 68, 68;
+   --color-success-rgb: 16, 185, 129;
+   --color-bg-rgb: 26, 26, 46;
+
+   // Typography
+   --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+   // Sidebar
+   --sidebar-width: 176px;
+   --sidebar-padding: 20px 12px;
+   --sidebar-bg: var(--color-surface);
+   --sidebar-border-right: 1px solid var(--color-border);
+
+   // Logo
+   --logo-padding: 4px 10px 20px;
+   --logo-font-family: inherit;
+   --logo-font-size: 1.1rem;
+   --logo-font-weight: 600;
+   --logo-color: #fff;
+   --logo-letter-spacing: -0.02em;
+   --logo-text-transform: none;
+   --logo-line-height: 1.4;
+   --logo-border-bottom: none;
+
+   // Nav
+   --nav-padding: 0;
+   --nav-gap: 2px;
+   --nav-item-padding: 8px 10px;
+   --nav-item-border-radius: 8px;
+   --nav-item-border-left-width: 0px;
+   --nav-item-font-size: 0.875rem;
+   --nav-item-letter-spacing: normal;
+   --nav-item-text-transform: none;
+   --nav-active-bg: rgba(124, 58, 237, 0.18);
+   --nav-active-color: var(--color-accent-hover);
+   --nav-active-border-color: transparent;
+
+   // Sidebar badge
+   --badge-border-radius: 8px;
+
+   // Overview layout
+   --overview-padding: 24px;
+   --overview-gap: 16px;
+   --controls-padding: 0 0 8px;
+   --controls-gap: 12px;
+   --controls-border-top: none;
+   --controls-bg: transparent;
+
+   // MicSelect
+   --mic-wrapper-padding: 0;
+   --mic-wrapper-border-bottom: none;
+   --mic-wrapper-bg: transparent;
+
+   // Record Button
+   --btn-width: 80px;
+   --btn-height: 80px;
+   --btn-border-radius: 50%;
+   --btn-border-width: 3px;
+   --btn-font-family: inherit;
+   --btn-font-size: 0;
+   --btn-font-weight: inherit;
+   --btn-letter-spacing: normal;
+   --btn-color: var(--color-accent);
+   --btn-dot-display: none;
+   --btn-label-display: none;
+   --btn-after-display: block;
+   --btn-recording-bg: transparent;
+   --btn-recording-color: var(--color-error);
+
+   // Transcript Area
+   --transcript-padding: 16px;
+   --transcript-border-radius: 12px;
+   --transcript-outer-border: 1px solid var(--color-border);
+   --transcript-bg: var(--color-surface);
+
+   // Transcript Block
+   --block-border-radius: 8px;
+   --block-outer-border: 1px solid var(--color-border);
+   --block-left-border: 1px solid var(--color-border);
+   --block-bg: var(--color-transcript-bg);
+   --block-padding: 12px 40px 12px 12px;
+
+   // Status bar
+   --status-font-size: 0.85rem;
+   --status-font-family: inherit;
+   --status-letter-spacing: normal;
+   --status-text-transform: none;
+   --status-font-weight: normal;
+
+   // Generic inputs / items
+   --select-border-radius: 8px;
+   --item-border-radius: 8px;
+   --item-bg: var(--color-surface);
+   --item-gap: 10px;
+   --item-border: 1px solid var(--color-border);
+   --settings-list-gap: 10px;
+   --settings-list-border: none;
 }
 
+// ─── Theme: v1 — CRT Amber ────────────────────────────────────────────────────
+[data-theme='v1'] {
+   --color-bg: #070706;
+   --color-surface: #0c0b0a;
+   --color-surface-hover: #131110;
+   --color-border: #1e1b17;
+   --color-text: #c8c3b5;
+   --color-text-muted: #5c5650;
+   --color-text-dim: #302c26;
+   --color-accent: #d98f2a;
+   --color-accent-hover: #e8a030;
+   --color-error: #c43535;
+   --color-success: #3d8f5e;
+   --color-warning: #b07020;
+   --color-transcript-bg: #090807;
+   --color-scrollbar-thumb: #1e1c18;
+   --color-accent-rgb: 217, 143, 42;
+   --color-error-rgb: 196, 53, 53;
+
+   --font-body: 'Azeret Mono', 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
+
+   --sidebar-width: 162px;
+   --sidebar-padding: 0;
+
+   --logo-padding: 18px 16px 16px;
+   --logo-font-size: 0.8rem;
+   --logo-font-weight: 700;
+   --logo-color: var(--color-text-muted);
+   --logo-letter-spacing: 0.12em;
+   --logo-text-transform: uppercase;
+   --logo-border-bottom: 1px solid var(--color-border);
+
+   --nav-padding: 8px 0;
+   --nav-gap: 0;
+   --nav-item-padding: 9px 16px;
+   --nav-item-border-radius: 0;
+   --nav-item-border-left-width: 2px;
+   --nav-item-font-size: 0.7rem;
+   --nav-item-letter-spacing: 0.1em;
+   --nav-item-text-transform: uppercase;
+   --nav-active-bg: transparent;
+   --nav-active-color: var(--color-accent);
+   --nav-active-border-color: var(--color-accent);
+
+   --badge-border-radius: 0;
+
+   --overview-padding: 0;
+   --overview-gap: 0;
+   --controls-padding: 16px;
+   --controls-gap: 8px;
+   --controls-border-top: 1px solid var(--color-border);
+
+   --mic-wrapper-padding: 10px 20px;
+   --mic-wrapper-border-bottom: 1px solid var(--color-border);
+
+   --btn-width: 140px;
+   --btn-height: 42px;
+   --btn-border-radius: 0;
+   --btn-border-width: 1px;
+   --btn-font-size: 0.72rem;
+   --btn-font-weight: 700;
+   --btn-letter-spacing: 0.22em;
+   --btn-color: var(--color-accent);
+   --btn-dot-display: block;
+   --btn-label-display: block;
+   --btn-after-display: none;
+
+   --transcript-padding: 16px 20px;
+   --transcript-border-radius: 0;
+   --transcript-outer-border: none;
+   --transcript-bg: transparent;
+
+   --block-border-radius: 0;
+   --block-outer-border: none;
+   --block-left-border: 2px solid var(--color-border);
+   --block-bg: transparent;
+   --block-padding: 10px 34px 10px 12px;
+
+   --status-font-size: 0.65rem;
+   --status-letter-spacing: 0.1em;
+   --status-text-transform: uppercase;
+   --status-font-weight: 600;
+
+   --select-border-radius: 0;
+   --item-border-radius: 0;
+   --item-bg: transparent;
+   --settings-list-border: 1px solid var(--color-border);
+   --settings-list-gap: 0;
+}
+
+// ─── Theme: v2 — Editorial ────────────────────────────────────────────────────
+[data-theme='v2'] {
+   --color-bg: #0f0e11;
+   --color-surface: #161419;
+   --color-surface-hover: #1d1a22;
+   --color-border: #2a2630;
+   --color-text: #e2dbf0;
+   --color-text-muted: #6a6278;
+   --color-text-dim: #362f42;
+   --color-accent: #e8543a;
+   --color-accent-hover: #f06348;
+   --color-error: #d44040;
+   --color-success: #42a878;
+   --color-warning: #d08830;
+   --color-transcript-bg: #120f16;
+   --color-scrollbar-thumb: #2a2630;
+   --color-accent-rgb: 232, 84, 58;
+   --color-error-rgb: 212, 64, 64;
+   --color-success-rgb: 66, 168, 120;
+   --color-bg-rgb: 15, 14, 17;
+
+   --font-body: 'DM Sans', system-ui, -apple-system, sans-serif;
+
+   --sidebar-width: 192px;
+   --sidebar-padding: 0;
+
+   --logo-padding: 22px 20px 18px;
+   --logo-font-family: 'Playfair Display', Georgia, serif;
+   --logo-font-size: 1.25rem;
+   --logo-font-weight: 700;
+   --logo-color: var(--color-text);
+   --logo-letter-spacing: -0.01em;
+   --logo-line-height: 1.2;
+   --logo-border-bottom: 1px solid var(--color-border);
+
+   --nav-padding: 10px 0;
+   --nav-gap: 0;
+   --nav-item-padding: 9px 20px;
+   --nav-item-border-radius: 0;
+   --nav-item-border-left-width: 3px;
+   --nav-active-bg: rgba(var(--color-accent-rgb), 0.08);
+   --nav-active-color: var(--color-accent);
+   --nav-active-border-color: var(--color-accent);
+
+   --badge-border-radius: 4px;
+
+   --overview-padding: 0;
+   --overview-gap: 0;
+   --controls-padding: 20px;
+   --controls-gap: 10px;
+   --controls-border-top: 1px solid var(--color-border);
+   --controls-bg: var(--color-surface);
+
+   --mic-wrapper-padding: 10px 20px;
+   --mic-wrapper-border-bottom: 1px solid var(--color-border);
+   --mic-wrapper-bg: var(--color-surface);
+
+   --btn-width: 120px;
+   --btn-height: 44px;
+   --btn-border-radius: 4px;
+   --btn-border-width: 1.5px;
+   --btn-font-family: 'Playfair Display', Georgia, serif;
+   --btn-font-size: 1rem;
+   --btn-font-weight: 600;
+   --btn-letter-spacing: 0.01em;
+   --btn-color: var(--color-accent);
+   --btn-dot-display: none;
+   --btn-label-display: block;
+   --btn-after-display: none;
+   --btn-recording-bg: var(--color-error);
+   --btn-recording-color: var(--color-white);
+
+   --transcript-padding: 20px 24px;
+   --transcript-border-radius: 0;
+   --transcript-outer-border: none;
+   --transcript-bg: transparent;
+
+   --block-border-radius: 6px;
+   --block-outer-border: 1px solid var(--color-border);
+   --block-left-border: 1px solid var(--color-border);
+   --block-bg: var(--color-transcript-bg);
+   --block-padding: 14px 44px 14px 16px;
+
+   --status-font-size: 0.78rem;
+   --status-font-weight: 500;
+
+   --select-border-radius: 4px;
+   --item-border-radius: 6px;
+   --item-bg: var(--color-surface);
+   --item-gap: 8px;
+}
+
+// ─── Theme: v3 — Bauhaus ──────────────────────────────────────────────────────
+[data-theme='v3'] {
+   --color-bg: #141210;
+   --color-surface: #1e1b17;
+   --color-surface-alt: #191611;
+   --color-surface-hover: #252118;
+   --color-border: #d8d3ca;
+   --color-border-light: #2e2a25;
+   --color-text: #e8e4dc;
+   --color-text-muted: #9e9589;
+   --color-text-dim: #4a4540;
+   --color-accent: #d62828;
+   --color-accent-hover: #b31f1f;
+   --color-error: #d62828;
+   --color-on-accent: #f5f2ec;
+   --color-success: #2a7a4f;
+   --color-warning: #b8720e;
+   --color-scrollbar-thumb: #2e2a25;
+   --color-accent-rgb: 214, 40, 40;
+
+   --font-body: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+
+   --sidebar-width: 188px;
+   --sidebar-padding: 0;
+   --sidebar-bg: var(--color-bg);
+   --sidebar-border-right: 2px solid var(--color-border);
+
+   --logo-padding: 20px 18px 16px;
+   --logo-font-family: 'Bebas Neue', 'Arial Black', Impact, sans-serif;
+   --logo-font-size: 1.7rem;
+   --logo-font-weight: 400;
+   --logo-color: var(--color-text);
+   --logo-letter-spacing: 0.06em;
+   --logo-line-height: 1;
+   --logo-border-bottom: 2px solid var(--color-border);
+
+   --nav-padding: 6px 0;
+   --nav-gap: 0;
+   --nav-item-padding: 10px 18px;
+   --nav-item-border-radius: 0;
+   --nav-item-border-left-width: 3px;
+   --nav-item-font-size: 0.72rem;
+   --nav-item-letter-spacing: 0.08em;
+   --nav-item-text-transform: uppercase;
+   --nav-active-bg: transparent;
+   --nav-active-color: var(--color-accent);
+   --nav-active-border-color: var(--color-accent);
+
+   --badge-border-radius: 0;
+
+   --overview-padding: 0;
+   --overview-gap: 0;
+   --controls-padding: 18px;
+   --controls-gap: 10px;
+   --controls-border-top: 2px solid var(--color-border);
+
+   --mic-wrapper-padding: 10px 20px;
+   --mic-wrapper-border-bottom: 1px solid var(--color-border-light);
+   --mic-wrapper-bg: var(--color-surface);
+
+   --btn-width: 144px;
+   --btn-height: 50px;
+   --btn-border-radius: 0;
+   --btn-border-width: 2px;
+   --btn-font-family: 'Bebas Neue', 'Arial Black', Impact, sans-serif;
+   --btn-font-size: 1.35rem;
+   --btn-font-weight: 400;
+   --btn-letter-spacing: 0.12em;
+   --btn-color: var(--color-text);
+   --btn-dot-display: none;
+   --btn-label-display: block;
+   --btn-after-display: none;
+   --btn-recording-bg: var(--color-accent);
+   --btn-recording-color: var(--color-on-accent);
+
+   --transcript-padding: 20px 24px;
+   --transcript-border-radius: 0;
+   --transcript-outer-border: none;
+   --transcript-bg: var(--color-surface-alt);
+
+   --block-border-radius: 0;
+   --block-outer-border: 1px solid var(--color-border-light);
+   --block-left-border: 3px solid var(--color-border);
+   --block-bg: var(--color-surface);
+   --block-padding: 13px 44px 13px 15px;
+
+   --status-font-family: 'IBM Plex Mono', monospace;
+   --status-font-size: 0.7rem;
+   --status-letter-spacing: 0.04em;
+
+   --select-border-radius: 0;
+   --item-border-radius: 0;
+   --item-bg: transparent;
+   --item-gap: 0;
+   --settings-list-border: 2px solid var(--color-border);
+   --settings-list-gap: 0;
+}
+
+// ─── Base styles ──────────────────────────────────────────────────────────────
 * {
    box-sizing: border-box;
    margin: 0;
@@ -30,7 +416,7 @@ body {
 
    height: 100vh;
 
-   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+   font-family: var(--font-body);
    color: var(--color-text);
 
    background: var(--color-bg);

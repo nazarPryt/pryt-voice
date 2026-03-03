@@ -18,6 +18,9 @@ export function RecordButton({ isRecording, disabled, onClick }: Props) {
          aria-keyshortcuts="Space"
          disabled={disabled}
          onClick={onClick}
-      />
+      >
+         <span className={s.dot} />
+         <span className={s.label}>{isRecording ? 'Stop' : 'Record'}</span>
+      </button>
    )
 }

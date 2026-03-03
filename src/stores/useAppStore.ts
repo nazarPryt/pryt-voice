@@ -2,6 +2,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { create } from 'zustand'
 
 import { STORAGE_KEYS } from '@/shared/storageKeys'
+import type { ThemeId } from '@/shared/storageKeys'
 import { DEFAULT_RECORDING_SHORTCUT } from '@/shared/types'
 import type { CheckResult, KeyShortcut, Segment } from '@/shared/types'
 
@@ -27,12 +28,15 @@ interface AppState {
    isCapturingShortcut: boolean
    // Behaviour
    autoPaste: boolean
+   // Theme
+   theme: ThemeId
    // Actions
    setStatus: (text: string, type?: StatusType) => void
    setSelectedMicId: (id: string) => Promise<void>
    setRecordingShortcut: (shortcut: KeyShortcut) => void
    setIsCapturingShortcut: (capturing: boolean) => void
    setAutoPaste: (val: boolean) => Promise<void>
+   setTheme: (theme: ThemeId) => void
    checkSetup: () => Promise<void>
    populateMics: () => Promise<void>
    addGroup: (segments: Segment[]) => void
@@ -61,6 +65,7 @@ export const initialDataState = {
    recordingShortcut: loadRecordingShortcut(),
    isCapturingShortcut: false,
    autoPaste: localStorage.getItem(STORAGE_KEYS.AUTO_PASTE) === 'true',
+   theme: (localStorage.getItem(STORAGE_KEYS.THEME) as ThemeId | null) ?? 'default',
 }
 
 export const useAppStore = create<AppState>()((set, get) => ({
@@ -85,6 +90,11 @@ export const useAppStore = create<AppState>()((set, get) => ({
       localStorage.setItem(STORAGE_KEYS.AUTO_PASTE, String(val))
       set({ autoPaste: val })
       await invoke('set_auto_paste', { enabled: val })
+   },
+
+   setTheme: theme => {
+      localStorage.setItem(STORAGE_KEYS.THEME, theme)
+      set({ theme })
    },
 
    checkSetup: async () => {

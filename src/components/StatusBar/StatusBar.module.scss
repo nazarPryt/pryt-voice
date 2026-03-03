@@ -1,7 +1,16 @@
 .status {
+   display: flex;
+   gap: 6px;
+   align-items: center;
+
    min-height: 1.2em;
-   font-size: 0.85rem;
+
+   font-family: var(--status-font-family);
+   font-size: var(--status-font-size);
+   font-weight: var(--status-font-weight);
    color: var(--color-text-muted);
+   text-transform: var(--status-text-transform);
+   letter-spacing: var(--status-letter-spacing);
 
    &.recording {
       color: var(--color-error);

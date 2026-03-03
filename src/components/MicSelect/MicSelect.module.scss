@@ -4,6 +4,11 @@
    gap: 8px;
    align-items: center;
 
+   padding: var(--mic-wrapper-padding);
+   border-bottom: var(--mic-wrapper-border-bottom);
+
+   background: var(--mic-wrapper-bg);
+
    label {
       font-size: 0.8rem;
       color: var(--color-text-muted);
@@ -37,7 +42,7 @@
    width: 100%;
    padding: 6px 28px 6px 10px;
    border: 1px solid var(--color-border);
-   border-radius: 8px;
+   border-radius: var(--select-border-radius);
 
    font-size: 0.85rem;
    color: var(--color-text);
@@ -57,7 +62,7 @@
 
    padding: 4px 8px;
    border: 1px solid var(--color-border);
-   border-radius: 8px;
+   border-radius: var(--select-border-radius);
 
    font-size: 1.1rem;
    line-height: 1;

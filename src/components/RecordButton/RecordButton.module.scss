@@ -3,16 +3,33 @@
 
    position: relative;
 
-   width: 80px;
-   height: 80px;
-   border: 3px solid var(--color-accent);
-   border-radius: 50%;
+   display: flex;
+   gap: 10px;
+   align-items: center;
+   justify-content: center;
+
+   width: var(--btn-width);
+   height: var(--btn-height);
+   padding: 0;
+   border: var(--btn-border-width) solid var(--btn-color);
+   border-radius: var(--btn-border-radius);
+
+   font-family: var(--btn-font-family);
+   font-size: var(--btn-font-size);
+   font-weight: var(--btn-font-weight);
+   color: var(--btn-color);
+   letter-spacing: var(--btn-letter-spacing);
 
    background: transparent;
    outline: none;
 
-   transition: all 0.2s ease;
+   transition:
+      background 0.15s,
+      color 0.15s,
+      border-color 0.15s,
+      box-shadow 0.15s;
 
+   // Default theme inner circle (shown only when --btn-after-display is block)
    &::after {
       content: '';
 
@@ -20,6 +37,8 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
+
+      display: var(--btn-after-display);
 
       width: 36px;
       height: 36px;
@@ -30,7 +49,24 @@
       transition: all 0.2s ease;
    }
 
-   &:hover {
+   .dot {
+      display: var(--btn-dot-display);
+      flex-shrink: 0;
+
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+
+      background: currentColor;
+
+      transition: background 0.15s;
+   }
+
+   .label {
+      display: var(--btn-label-display);
+   }
+
+   &:hover:not(:disabled) {
       border-color: var(--color-accent-hover);
 
       &::after {
@@ -45,6 +81,8 @@
 
    &.recording {
       border-color: var(--color-error);
+      color: var(--btn-recording-color);
+      background: var(--btn-recording-bg);
       animation: pulse 1.5s ease-in-out infinite;
 
       &::after {
@@ -53,15 +91,29 @@
          border-radius: 6px;
          background: var(--color-error);
       }
+
+      .dot {
+         animation: blink 0.9s step-end infinite;
+      }
    }
 }
 
 @keyframes pulse {
    0%,
    100% {
-      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+      box-shadow: 0 0 0 0 rgba(var(--color-error-rgb), 0.4);
    }
    50% {
-      box-shadow: 0 0 0 16px rgba(239, 68, 68, 0);
+      box-shadow: 0 0 0 12px rgba(var(--color-error-rgb), 0);
+   }
+}
+
+@keyframes blink {
+   0%,
+   100% {
+      opacity: 1;
+   }
+   50% {
+      opacity: 0;
    }
 }

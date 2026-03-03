@@ -3,18 +3,21 @@
    display: flex;
    flex: 1;
    flex-direction: column;
-   gap: 16px;
+   gap: var(--overview-gap);
 
    height: 100%;
-   padding: 24px;
+   padding: var(--overview-padding);
 }
 
 .controls {
    display: flex;
    flex-direction: column;
    flex-shrink: 0;
-   gap: 12px;
+   gap: var(--controls-gap);
    align-items: center;
 
-   padding-bottom: 8px;
+   padding: var(--controls-padding);
+   border-top: var(--controls-border-top);
+
+   background: var(--controls-bg);
 }
