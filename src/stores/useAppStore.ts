@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/core'
+import { emit } from '@tauri-apps/api/event'
 import { create } from 'zustand'
 
 import { STORAGE_KEYS } from '@/shared/storageKeys'
@@ -95,6 +96,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
    setTheme: theme => {
       localStorage.setItem(STORAGE_KEYS.THEME, theme)
       set({ theme })
+      void emit('theme-changed', theme)
    },
 
    checkSetup: async () => {
