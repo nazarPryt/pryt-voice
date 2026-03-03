@@ -19,6 +19,7 @@ vi.mock('@tauri-apps/plugin-clipboard-manager', () => ({
 }))
 
 vi.mock('@tauri-apps/api/event', () => ({
+   emit: vi.fn().mockResolvedValue(undefined),
    listen: vi.fn().mockImplementation((event: string, cb: ListenCallback) => {
       listenHandlers[event] = listenHandlers[event] ?? []
       listenHandlers[event].push(cb)

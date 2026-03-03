@@ -1,6 +1,6 @@
 import { clsx } from 'clsx'
 
-import { THEMES } from '@/shared/storageKeys'
+import { THEMES } from '@/features/theme/types'
 import { useAppStore } from '@/stores/useAppStore'
 
 import s from './SettingsTab.module.scss'

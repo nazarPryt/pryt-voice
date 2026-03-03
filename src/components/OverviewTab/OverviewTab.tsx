@@ -6,15 +6,24 @@ import { useAppStore } from '@/stores/useAppStore'
 
 import s from './OverviewTab.module.scss'
 
-interface Props {
-   isRecording: boolean
-   disabled: boolean
-   onToggle: () => void
-}
+export function OverviewTab() {
+   const {
+      mics,
+      micsLoading,
+      selectedMicId,
+      setSelectedMicId,
+      populateMics,
+      groups,
+      statusText,
+      statusType,
+      whisperStatus,
+      isRecording,
+      isProcessing,
+      isBusy,
+      toggle,
+   } = useAppStore()
 
-export function OverviewTab({ isRecording, disabled, onToggle }: Props) {
-   const { mics, micsLoading, selectedMicId, setSelectedMicId, populateMics, groups, statusText, statusType } =
-      useAppStore()
+   const isDisabled = !whisperStatus?.ready || mics.length === 0 || isBusy || isProcessing
 
    return (
       <div className={s.overview}>
@@ -27,7 +36,7 @@ export function OverviewTab({ isRecording, disabled, onToggle }: Props) {
          />
          <TranscriptArea segments={groups} />
          <div className={s.controls}>
-            <RecordButton isRecording={isRecording} disabled={disabled} onClick={onToggle} />
+            <RecordButton isRecording={isRecording} disabled={isDisabled} onClick={toggle} />
             <StatusBar text={statusText} type={statusType} />
          </div>
       </div>

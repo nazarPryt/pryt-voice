@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 
+import { formatShortcut } from '@/features/shortcuts/formatShortcut'
 import { DEFAULT_RECORDING_SHORTCUT } from '@/shared/types'
 import type { KeyShortcut } from '@/shared/types'
-import { formatShortcut } from '@/shared/utils/shortcut'
 import { useAppStore } from '@/stores/useAppStore'
 
 import s from './ShortcutsTab.module.scss'

@@ -1,8 +1,4 @@
-import { useEffect, useState } from 'react'
-
 import * as Tabs from '@radix-ui/react-tabs'
-import { invoke } from '@tauri-apps/api/core'
-import { listen } from '@tauri-apps/api/event'
 import { clsx } from 'clsx'
 import { History, Keyboard, Mic, Settings } from 'lucide-react'
 
@@ -10,10 +6,11 @@ import { HistoryTab } from '@/components/HistoryTab'
 import { OverviewTab } from '@/components/OverviewTab'
 import { SettingsTab } from '@/components/SettingsTab'
 import { ShortcutsTab } from '@/components/ShortcutsTab'
-import { useRecorder } from '@/hooks/useRecorder'
-import type { Segment } from '@/shared/types'
-import { formatShortcut } from '@/shared/utils/shortcut'
-import { playStartSound, playStopSound } from '@/shared/utils/sounds'
+import { useRecordingEvents } from '@/features/recording/useRecordingEvents'
+import { useSettingsSync } from '@/features/settings/useSettingsSync'
+import { useWhisperSetup } from '@/features/setup/useWhisperSetup'
+import { useShortcutRegistration } from '@/features/shortcuts/useShortcutRegistration'
+import { useThemeSync } from '@/features/theme/useThemeSync'
 import { useAppStore } from '@/stores/useAppStore'
 
 import s from './App.module.scss'
@@ -26,111 +23,13 @@ const NAV_ITEMS = [
 ] as const
 
 export function App() {
-   const {
-      whisperStatus,
-      checkingWhisper,
-      mics,
-      selectedMicId,
-      recordingShortcut,
-      autoPaste,
-      theme,
-      setStatus,
-      checkSetup,
-      populateMics,
-      addGroup,
-   } = useAppStore()
+   useThemeSync()
+   useWhisperSetup()
+   useRecordingEvents()
+   useShortcutRegistration()
+   useSettingsSync()
 
-   // Apply the selected theme to the document root
-   useEffect(() => {
-      if (theme === 'default') {
-         delete document.documentElement.dataset.theme
-      } else {
-         document.documentElement.dataset.theme = theme
-      }
-   }, [theme])
-   const { isBusy, startRecording, stopRecording } = useRecorder()
-   const [isRecordingState, setIsRecordingState] = useState(false)
-   const [isProcessing, setIsProcessing] = useState(false)
-
-   // Listen to Rust-emitted recording/transcription events.
-   useEffect(() => {
-      const handlers = [
-         listen('recording-started', () => {
-            playStartSound()
-            setIsRecordingState(true)
-            setStatus('Recording — press shortcut again to stop', 'recording')
-         }),
-         listen('recording-stopping', () => {
-            playStopSound()
-            setIsRecordingState(false)
-            setIsProcessing(true)
-            setStatus('Transcribing...', 'processing')
-         }),
-         listen('recording-stopped', () => {
-            setIsRecordingState(false)
-         }),
-         listen<Segment[]>('transcription-result', ({ payload }) => {
-            setIsProcessing(false)
-            if (payload.length > 0) {
-               addGroup(payload)
-            }
-            setStatus(payload.length === 0 ? 'No speech detected' : 'Ready', 'idle')
-         }),
-         listen<string>('transcription-error', ({ payload }) => {
-            setIsProcessing(false)
-            setIsRecordingState(false)
-            setStatus(`Error: ${payload}`, 'error')
-         }),
-      ]
-
-      return () => {
-         handlers.forEach(p => p.then(fn => fn()))
-      }
-   }, [setStatus, addGroup])
-
-   useEffect(() => {
-      checkSetup()
-      populateMics()
-   }, [checkSetup, populateMics])
-
-   // Sync auto-paste setting to Rust on mount (Rust state resets on each launch).
-   useEffect(() => {
-      invoke('set_auto_paste', { enabled: autoPaste }).catch(() => {})
-   }, [autoPaste])
-
-   // Register the global (OS-level) shortcut whenever it changes.
-   useEffect(() => {
-      const shortcutStr = formatShortcut(recordingShortcut)
-      invoke('register_shortcut', { shortcut: shortcutStr }).catch(err =>
-         setStatus(`Shortcut error: ${String(err)}`, 'error'),
-      )
-   }, [recordingShortcut, setStatus])
-
-   // Manual toggle from the UI button (when window is open).
-   const handleToggle = async () => {
-      if (isBusy || isProcessing) return
-
-      if (!isRecordingState) {
-         setStatus('Starting mic...', 'recording')
-         try {
-            await startRecording(selectedMicId || undefined)
-            playStartSound()
-            setIsRecordingState(true)
-            setStatus('Recording — click again to stop', 'recording')
-         } catch (err) {
-            setStatus(`Mic error: ${(err as Error).message}`, 'error')
-         }
-      } else {
-         playStopSound()
-         setIsRecordingState(false)
-         setIsProcessing(true)
-         setStatus('Transcribing...', 'processing')
-         await stopRecording()
-         // Result arrives via 'transcription-result' event
-      }
-   }
-
-   const isDisabled = !whisperStatus?.ready || mics.length === 0
+   const { whisperStatus, checkingWhisper } = useAppStore()
 
    const whisperStatusClass = clsx(s.whisperBadge, {
       [s.ready]: !checkingWhisper && whisperStatus?.ready,
@@ -167,11 +66,7 @@ export function App() {
 
          <div className={s.content}>
             <Tabs.Content value="overview" className={s.tabContent}>
-               <OverviewTab
-                  isRecording={isRecordingState}
-                  disabled={isDisabled || isBusy || isProcessing}
-                  onToggle={handleToggle}
-               />
+               <OverviewTab />
             </Tabs.Content>
             <Tabs.Content value="history" className={s.tabContent}>
                <HistoryTab />
