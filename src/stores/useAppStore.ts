@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 
 import type { HistorySlice } from '@/features/history/historySlice'
-import { createHistorySlice } from '@/features/history/historySlice'
+import { DEFAULT_MAX_HISTORY, createHistorySlice } from '@/features/history/historySlice'
 import type { MicsSlice } from '@/features/mics/micsSlice'
 import { createMicsSlice } from '@/features/mics/micsSlice'
 import type { RecordingSlice } from '@/features/recording/recordingSlice'
@@ -19,7 +19,7 @@ import { createThemeSlice } from '@/features/theme/themeSlice'
 import type { ThemeId } from '@/features/theme/types'
 import { STORAGE_KEYS } from '@/shared/storageKeys'
 import { DEFAULT_RECORDING_SHORTCUT } from '@/shared/types'
-import type { CheckResult, KeyShortcut, Segment } from '@/shared/types'
+import type { CheckResult, HistoryEntry, KeyShortcut, Segment } from '@/shared/types'
 
 export type AppState = ThemeSlice &
    StatusSlice &
@@ -53,6 +53,8 @@ export const initialDataState = {
    isCapturingShortcut: false,
    autoPaste: localStorage.getItem(STORAGE_KEYS.AUTO_PASTE) === 'true',
    groups: [] as Segment[][],
+   history: [] as HistoryEntry[],
+   maxHistory: DEFAULT_MAX_HISTORY,
    isRecording: false,
    isProcessing: false,
    isBusy: false,

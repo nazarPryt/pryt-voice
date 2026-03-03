@@ -2,15 +2,116 @@
    display: flex;
    flex: 1;
    flex-direction: column;
-   align-items: center;
-   justify-content: center;
 
    height: 100%;
-   padding: 24px;
+   padding: 32px 24px;
+
+   &.empty {
+      align-items: center;
+      justify-content: center;
+   }
 }
 
-.empty {
+.emptyText {
    font-style: italic;
    color: var(--color-text-dim);
    text-align: center;
+}
+
+// ─── Header ───────────────────────────────────────────────────────────────────
+.header {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   margin-bottom: 16px;
+}
+
+.heading {
+   font-size: 1rem;
+   font-weight: 600;
+   color: var(--color-text);
+}
+
+.clearBtn {
+   cursor: pointer;
+
+   display: flex;
+   gap: 5px;
+   align-items: center;
+
+   padding: 5px 10px;
+   border: 1px solid var(--color-border);
+   border-radius: var(--item-border-radius);
+
+   font-size: 0.75rem;
+   color: var(--color-text-dim);
+
+   background: transparent;
+
+   transition:
+      border-color 0.15s,
+      color 0.15s,
+      background 0.15s;
+
+   &:hover {
+      border-color: var(--color-error, #e55);
+      color: var(--color-error, #e55);
+      background: rgba(220, 60, 60, 0.08);
+   }
+}
+
+// ─── List ─────────────────────────────────────────────────────────────────────
+.list {
+   overflow-y: auto;
+   display: flex;
+   flex: 1;
+   flex-direction: column;
+   gap: 8px;
+
+   list-style: none;
+}
+
+.entry {
+   cursor: pointer;
+
+   display: flex;
+   flex-direction: column;
+   gap: 4px;
+
+   padding: 10px 14px;
+   border: var(--item-border, 1px solid var(--color-border));
+   border-radius: var(--item-border-radius);
+
+   background: var(--item-bg);
+
+   transition:
+      border-color 0.15s,
+      background 0.15s;
+
+   &:hover {
+      border-color: var(--color-accent);
+      background: var(--color-surface-hover);
+   }
+}
+
+.copied {
+   border-color: var(--color-accent);
+   background: rgba(var(--color-accent-rgb), 0.1);
+}
+
+.entryText {
+   font-size: 0.85rem;
+   line-height: 1.45;
+   color: var(--color-text);
+   word-break: break-word;
+   white-space: pre-wrap;
+}
+
+.entryTime {
+   font-size: 0.72rem;
+   color: var(--color-text-dim);
+}
+
+.copied .entryTime {
+   color: var(--color-accent);
 }

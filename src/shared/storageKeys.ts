@@ -3,4 +3,6 @@ export const STORAGE_KEYS = {
    RECORDING_SHORTCUT: 'recordingShortcut',
    AUTO_PASTE: 'autoPaste',
    THEME: 'theme',
+   HISTORY: 'history',
+   MAX_HISTORY: 'maxHistory',
 } as const

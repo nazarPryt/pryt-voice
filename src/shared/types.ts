@@ -4,6 +4,12 @@ export interface Segment {
    text: string
 }
 
+export interface HistoryEntry {
+   id: string
+   text: string
+   createdAt: number
+}
+
 export interface CheckResult {
    ready: boolean
    missing: string[]

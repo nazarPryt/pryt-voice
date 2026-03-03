@@ -6,7 +6,7 @@ import { useAppStore } from '@/stores/useAppStore'
 import s from './SettingsTab.module.scss'
 
 export function SettingsTab() {
-   const { autoPaste, setAutoPaste, theme, setTheme } = useAppStore()
+   const { autoPaste, setAutoPaste, theme, setTheme, maxHistory, setMaxHistory } = useAppStore()
 
    return (
       <div className={s.container}>
@@ -30,6 +30,20 @@ export function SettingsTab() {
                      </button>
                   ))}
                </div>
+            </li>
+            <li className={s.item}>
+               <div className={s.itemLeft}>
+                  <span className={s.label}>History limit</span>
+                  <span className={s.description}>Maximum number of transcriptions to keep in history (1–20).</span>
+               </div>
+               <input
+                  type="number"
+                  className={s.numberInput}
+                  min={1}
+                  max={20}
+                  value={maxHistory}
+                  onChange={e => setMaxHistory(Number(e.target.value))}
+               />
             </li>
             <li className={s.item}>
                <div className={s.itemLeft}>
