@@ -6,7 +6,7 @@ Built with [Tauri v2](https://tauri.app) + React + [whisper.cpp](https://github.
 
 ## How it works
 
-Click the record button (or press spacebar), speak, click again to stop. Your speech is transcribed locally using whisper.cpp and displayed on screen.
+Click the record button (or press spacebar), speak, click again to stop. Your speech is transcribed locally using whisper.cpp and displayed on screen. A floating widget appears while recording and disappears after transcription. Transcriptions are saved to history and can be copied to clipboard.
 
 ## Prerequisites
 
@@ -20,21 +20,23 @@ Click the record button (or press spacebar), speak, click again to stop. Your sp
 ```bash
 sudo apt install build-essential cmake curl git
 sudo apt install libwebkit2gtk-4.1-dev libgtk-3-dev libglib2.0-dev \
-  libssl-dev libayatana-appindicator3-dev librsvg2-dev
+  libssl-dev libayatana-appindicator3-dev librsvg2-dev \
+  libasound2-dev libxdo-dev
 ```
 
 ### Fedora
 
 ```bash
 sudo dnf install gcc-c++ cmake curl git
-sudo dnf install webkit2gtk4.1-devel gtk3-devel openssl-devel librsvg2-devel
+sudo dnf install webkit2gtk4.1-devel gtk3-devel openssl-devel librsvg2-devel \
+  alsa-lib-devel libxdo-devel
 ```
 
 ### Arch
 
 ```bash
 sudo pacman -S base-devel cmake curl git
-sudo pacman -S webkit2gtk-4.1 gtk3 openssl librsvg
+sudo pacman -S webkit2gtk-4.1 gtk3 openssl librsvg alsa-lib xdotool
 ```
 
 ## Setup
@@ -73,6 +75,9 @@ bun run dev
 3. Speak
 4. Click again (or press **spacebar**) to stop
 5. Wait for transcription to appear
+6. Click a transcript block to copy it to clipboard
+
+The app has four tabs: **Overview** (recorder + live transcript), **History** (past sessions), **Shortcuts** (key bindings), and **Settings** (preferences).
 
 ## Packaging
 
@@ -87,41 +92,7 @@ Output will be in `src-tauri/target/release/bundle/`.
 If you change the app icon, regenerate all required sizes from a square PNG source (512×512 RGBA):
 
 ```bash
-bun run tauri icon src-tauri/icons/icon.png
-```
-
-## Project structure
-
-```
-src/
-  components/
-    Header/               # Whisper status + app title
-    MicSelect/            # Microphone dropdown
-    RecordButton/         # Record/stop button
-    StatusBar/            # Status text
-    TranscriptArea/       # Scrollable transcript list
-    TranscriptBlock/      # Single transcript entry (click to copy)
-  hooks/
-    useRecorder.ts        # AudioRecorder React wrapper
-    useTranscription.ts   # Transcription state + invoke
-    useCopyText.ts        # Clipboard copy + copied state
-  shared/
-    types.ts              # Shared TypeScript types
-  recorder.ts             # AudioWorklet-based mic capture
-  App.tsx                 # Root component
-public/
-  audio-processor.js      # AudioWorklet processor (16kHz mono)
-src-tauri/
-  src/                    # Rust backend
-    main.rs               # Tauri entry, registers commands
-    whisper.rs            # WAV encoding, whisper-cli spawning, output parsing
-    model_manager.rs      # Resolves whisper-cli and model paths
-  icons/                  # App icons (all sizes)
-  tauri.conf.json         # Tauri config
-  capabilities/           # Tauri v2 permission grants
-scripts/
-  setup-whisper.sh        # Builds whisper.cpp + downloads model
-whisper/                  # Created by setup script, .gitignored
+bunx tauri icon src-tauri/icons/icon.png
 ```
 
 ## Dev tools
@@ -129,12 +100,30 @@ whisper/                  # Created by setup script, .gitignored
 ```bash
 bun run format    # Format all source files with Prettier
 bun run fix:css   # Fix SCSS property order with Stylelint
+bun run test      # Run tests with Vitest
+bun run test:ui   # Run tests with Vitest UI
+```
+
+## Versioning
+
+Before a release, bump the version across all three files (`package.json`, `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`) in one command:
+
+```bash
+bun run version 2.1.0
+```
+
+Then build as usual:
+
+```bash
+bun run build
 ```
 
 ## Tech stack
 
 - **Tauri v2** (Rust backend + WebView frontend shell)
 - **React + TypeScript + Vite**
+- **Zustand** (state management, feature-sliced store)
+- **Radix UI Tabs** (sidebar navigation)
 - **SCSS Modules** (scoped styles, per-component)
 - **whisper.cpp** (spawned as a child process)
 - **Web Audio API** (AudioWorklet for 16kHz mono capture)

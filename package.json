@@ -4,7 +4,7 @@
       "name": "Nazar",
       "email": "nazar@pryt-voice.local"
    },
-   "version": "1.0.0",
+   "version": "2.0.0",
    "description": "Local voice recognition app powered by whisper.cpp",
    "scripts": {
       "dev": "tauri dev",
@@ -15,7 +15,8 @@
       "fix:css": "stylelint \"**/*.scss\" --fix",
       "format": "prettier --write .",
       "test": "vitest --config vitest.config.ts",
-      "test:ui": "vitest --config vitest.config.ts --ui"
+      "test:ui": "vitest --config vitest.config.ts --ui",
+      "version": "bun scripts/bump-version.ts"
    },
    "dependencies": {
       "@radix-ui/react-tabs": "^1.1.13",

@@ -28,6 +28,15 @@ pryt-voice/
 │   │   └── useCopyText.ts    # Clipboard write (CLIPBOARD + PRIMARY)
 │   ├── stores/
 │   │   └── useAppStore.ts    # Zustand store (centralized state)
+│   ├── features/             # Feature slices (Zustand state + hooks per feature)
+│   │   ├── recording/        # recordingSlice, useRecordingEvents
+│   │   ├── history/          # historySlice (persistent transcription history)
+│   │   ├── shortcuts/        # shortcutsSlice, useShortcutRegistration, formatShortcut
+│   │   ├── mics/             # micsSlice
+│   │   ├── settings/         # settingsSlice, useSettingsSync
+│   │   ├── setup/            # setupSlice, useWhisperSetup
+│   │   ├── status/           # statusSlice
+│   │   └── theme/            # themeSlice, useThemeSync, applyTheme
 │   └── components/           # Per-component folders (Component + .module.scss + index.ts)
 │       ├── Header/
 │       ├── MicSelect/
@@ -35,15 +44,19 @@ pryt-voice/
 │       ├── StatusBar/
 │       ├── TranscriptArea/
 │       ├── TranscriptBlock/
-│       ├── OverviewTab/
-│       ├── HistoryTab/
+│       ├── OverviewTab/      # Main recorder + live transcript tab
+│       ├── HistoryTab/       # Persistent transcription history
 │       ├── ShortcutsTab/
-│       └── SettingsTab/
+│       ├── SettingsTab/
+│       └── Widget/           # Floating always-on-top window (passive, event-driven)
 ├── src-tauri/
 │   └── src/
 │       ├── main.rs           # Tauri entry: registers commands, inits clipboard plugin
 │       ├── whisper.rs        # Float32Array→WAV, spawn whisper-cli, parse output
-│       └── model_manager.rs  # Resolves whisper-cli and model paths
+│       ├── model_manager.rs  # Resolves whisper-cli and model paths
+│       ├── widget.rs         # Floating widget window management
+│       ├── audio.rs          # Audio processing helpers
+│       └── paste.rs          # Paste/clipboard helpers
 ├── public/
 │   └── audio-processor.js   # AudioWorkletProcessor
 ├── index.html                # Main entry HTML
