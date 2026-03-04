@@ -5,4 +5,5 @@ export const STORAGE_KEYS = {
    THEME: 'theme',
    HISTORY: 'history',
    MAX_HISTORY: 'maxHistory',
+   OUTPUT_LANGUAGE: 'outputLanguage',
 } as const

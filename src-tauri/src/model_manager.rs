@@ -23,12 +23,12 @@ pub fn get_whisper_cli_path(app: &tauri::AppHandle) -> PathBuf {
 pub fn get_model_path(app: &tauri::AppHandle) -> PathBuf {
     if cfg!(debug_assertions) {
         let cwd = std::env::current_dir().unwrap_or_default();
-        cwd.join("../whisper/models/ggml-base.en.bin")
+        cwd.join("../whisper/models/ggml-base.bin")
     } else {
         app.path()
             .resource_dir()
             .unwrap_or_default()
-            .join("whisper/ggml-base.en.bin")
+            .join("whisper/ggml-base.bin")
     }
 }
 

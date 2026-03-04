@@ -128,6 +128,31 @@
    white-space: nowrap;
 }
 
+// ─── Radio group ──────────────────────────────────────────────────────────────
+.radioGroup {
+   display: flex;
+   flex-direction: column;
+   flex-shrink: 0;
+   gap: 6px;
+}
+
+.radioLabel {
+   cursor: pointer;
+
+   display: flex;
+   gap: 6px;
+   align-items: center;
+
+   font-size: 0.875rem;
+   color: var(--color-text);
+   white-space: nowrap;
+
+   input[type='radio'] {
+      cursor: pointer;
+      accent-color: var(--color-accent);
+   }
+}
+
 // ─── Number input ─────────────────────────────────────────────────────────────
 .numberInput {
    width: 56px;

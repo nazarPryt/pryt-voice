@@ -7,10 +7,31 @@ mod paste;
 mod widget;
 mod whisper;
 
+use std::sync::Mutex;
+
 use audio::{list_audio_devices as do_list_devices, AudioDevice, AudioState};
 use model_manager::{check_whisper_ready, CheckResult};
 use paste::{copy_and_maybe_paste, segments_to_text, PasteState};
 use tauri::Manager;
+
+// ---------------------------------------------------------------------------
+// Translate state — persists the output language choice across recordings
+// ---------------------------------------------------------------------------
+
+struct TranslateState(Mutex<bool>);
+
+impl TranslateState {
+    fn new() -> Self {
+        // Default: English output (translate = true)
+        TranslateState(Mutex::new(true))
+    }
+    fn set(&self, translate: bool) {
+        *self.0.lock().unwrap() = translate;
+    }
+    fn get(&self) -> bool {
+        *self.0.lock().unwrap()
+    }
+}
 
 // ---------------------------------------------------------------------------
 // Tauri commands
@@ -54,10 +75,11 @@ fn stop_recording(app: tauri::AppHandle) -> Result<(), String> {
     let app_clone = app.clone();
     tauri::async_runtime::spawn(async move {
         let audio_state = app_clone.state::<AudioState>();
+        let translate = app_clone.state::<TranslateState>().get();
         match audio_state.stop() {
             Ok(samples) => {
                 let _ = app_clone.emit("recording-stopped", ());
-                match whisper::transcribe(&app_clone, samples) {
+                match whisper::transcribe(&app_clone, samples, translate) {
                     Ok(segments) => {
                         let text = segments_to_text(&segments);
                         let _ = app_clone.emit("transcription-result", &segments);
@@ -98,6 +120,14 @@ fn set_auto_paste(state: tauri::State<'_, PasteState>, enabled: bool) {
     state.set_enabled(enabled);
 }
 
+/// Syncs the output language setting from the frontend.
+/// `translate = true`  → English output (whisper --translate)
+/// `translate = false` → Keep original language
+#[tauri::command]
+fn set_output_language(state: tauri::State<'_, TranslateState>, translate: bool) {
+    state.set(translate);
+}
+
 #[tauri::command]
 fn register_shortcut(app: tauri::AppHandle, shortcut: String) -> Result<(), String> {
     use tauri::Emitter;
@@ -121,10 +151,11 @@ fn register_shortcut(app: tauri::AppHandle, shortcut: String) -> Result<(), Stri
                 let app2 = app_handle.clone();
                 tauri::async_runtime::spawn(async move {
                     let audio_state = app2.state::<AudioState>();
+                    let translate = app2.state::<TranslateState>().get();
                     match audio_state.stop() {
                         Ok(samples) => {
                             let _ = app2.emit("recording-stopped", ());
-                            match whisper::transcribe(&app2, samples) {
+                            match whisper::transcribe(&app2, samples, translate) {
                                 Ok(segments) => {
                                     let text = segments_to_text(&segments);
                                     let _ = app2.emit("transcription-result", &segments);
@@ -182,6 +213,7 @@ fn main() {
     tauri::Builder::default()
         .manage(AudioState::new())
         .manage(PasteState::new())
+        .manage(TranslateState::new())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
@@ -193,6 +225,7 @@ fn main() {
             stop_recording,
             set_recording_device,
             set_auto_paste,
+            set_output_language,
         ])
         .setup(|app| {
             widget::create(app)?;

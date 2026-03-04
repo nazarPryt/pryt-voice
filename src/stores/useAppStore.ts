@@ -6,7 +6,7 @@ import type { MicsSlice } from '@/features/mics/micsSlice'
 import { createMicsSlice } from '@/features/mics/micsSlice'
 import type { RecordingSlice } from '@/features/recording/recordingSlice'
 import { createRecordingSlice } from '@/features/recording/recordingSlice'
-import type { SettingsSlice } from '@/features/settings/settingsSlice'
+import type { OutputLanguage, SettingsSlice } from '@/features/settings/settingsSlice'
 import { createSettingsSlice } from '@/features/settings/settingsSlice'
 import type { SetupSlice } from '@/features/setup/setupSlice'
 import { createSetupSlice } from '@/features/setup/setupSlice'
@@ -52,6 +52,8 @@ export const initialDataState = {
    recordingShortcut: loadRecordingShortcut(),
    isCapturingShortcut: false,
    autoPaste: localStorage.getItem(STORAGE_KEYS.AUTO_PASTE) === 'true',
+   outputLanguage: ((localStorage.getItem(STORAGE_KEYS.OUTPUT_LANGUAGE) as OutputLanguage | null) ??
+      'english') as OutputLanguage,
    groups: [] as Segment[][],
    history: [] as HistoryEntry[],
    maxHistory: DEFAULT_MAX_HISTORY,

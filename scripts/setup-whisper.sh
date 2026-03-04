@@ -34,11 +34,11 @@ echo "  Built: $WHISPER_CPP_DIR/build/bin/whisper-cli"
 
 # Download model
 mkdir -p "$MODELS_DIR"
-MODEL_FILE="$MODELS_DIR/ggml-base.en.bin"
+MODEL_FILE="$MODELS_DIR/ggml-base.bin"
 if [ ! -f "$MODEL_FILE" ]; then
-  echo "[3/3] Downloading ggml-base.en.bin model (~142MB)..."
+  echo "[3/3] Downloading ggml-base.bin model (~145MB)..."
   curl -L --progress-bar \
-    "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin" \
+    "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin" \
     -o "$MODEL_FILE"
 else
   echo "[3/3] Model already downloaded, skipping..."

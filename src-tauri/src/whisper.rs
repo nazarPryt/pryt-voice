@@ -57,17 +57,21 @@ pub fn encode_wav(samples: &[f32]) -> Vec<u8> {
     buf
 }
 
-fn run_whisper_cli(cli: &Path, model: &Path, wav: &Path) -> Result<String, String> {
-    let output = std::process::Command::new(cli)
-        .args([
-            "-m",
-            model.to_str().unwrap_or_default(),
-            "-f",
-            wav.to_str().unwrap_or_default(),
-            "--no-prints",
-            "-l",
-            "en",
-        ])
+fn run_whisper_cli(cli: &Path, model: &Path, wav: &Path, translate: bool) -> Result<String, String> {
+    let mut cmd = std::process::Command::new(cli);
+    cmd.args([
+        "-m",
+        model.to_str().unwrap_or_default(),
+        "-f",
+        wav.to_str().unwrap_or_default(),
+        "--no-prints",
+        "-l",
+        "auto",
+    ]);
+    if translate {
+        cmd.arg("--translate");
+    }
+    let output = cmd
         .output()
         .map_err(|e| format!("Failed to spawn whisper-cli: {e}"))?;
 
@@ -106,7 +110,7 @@ fn parse_output(stdout: &str) -> Vec<Segment> {
     segments
 }
 
-pub fn transcribe(app: &tauri::AppHandle, samples: Vec<f32>) -> Result<Vec<Segment>, String> {
+pub fn transcribe(app: &tauri::AppHandle, samples: Vec<f32>, translate: bool) -> Result<Vec<Segment>, String> {
     let cli = get_whisper_cli_path(app);
     let model = get_model_path(app);
 
@@ -117,6 +121,6 @@ pub fn transcribe(app: &tauri::AppHandle, samples: Vec<f32>) -> Result<Vec<Segme
     tmp.write_all(&wav_data)
         .map_err(|e| format!("Failed to write temp WAV: {e}"))?;
 
-    let stdout = run_whisper_cli(&cli, &model, tmp.path())?;
+    let stdout = run_whisper_cli(&cli, &model, tmp.path(), translate)?;
     Ok(parse_output(&stdout))
 }
