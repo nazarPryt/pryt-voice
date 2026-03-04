@@ -196,6 +196,20 @@ fn main() {
         ])
         .setup(|app| {
             widget::create(app)?;
+
+            // Exit the entire app when the main window is closed so the hidden
+            // widget window doesn't keep the process alive. Without this, the
+            // old process holds its global-shortcut grab and the next launch
+            // fails with "HotKey already registered".
+            if let Some(main_win) = app.get_webview_window("main") {
+                let handle = app.handle().clone();
+                main_win.on_window_event(move |event| {
+                    if let tauri::WindowEvent::Destroyed = event {
+                        handle.exit(0);
+                    }
+                });
+            }
+
             Ok(())
         })
         .run(tauri::generate_context!())

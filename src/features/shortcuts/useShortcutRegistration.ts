@@ -12,8 +12,15 @@ export function useShortcutRegistration() {
 
    useEffect(() => {
       const shortcutStr = formatShortcut(recordingShortcut)
-      invoke('register_shortcut', { shortcut: shortcutStr }).catch(err =>
-         setStatus(`Shortcut error: ${String(err)}`, 'error'),
-      )
+      invoke('register_shortcut', { shortcut: shortcutStr }).catch((err: unknown) => {
+         const msg = String(err)
+         const isConflict = msg.toLowerCase().includes('already registered')
+         setStatus(
+            isConflict
+               ? `Shortcut conflict: ${shortcutStr} is already taken by another app — choose a different shortcut`
+               : `Shortcut error: ${msg}`,
+            'error',
+         )
+      })
    }, [recordingShortcut, setStatus])
 }
