@@ -32,22 +32,34 @@ if [ ! -f "$WHISPER_CPP_DIR/build/bin/whisper-cli" ]; then
 fi
 echo "  Built: $WHISPER_CPP_DIR/build/bin/whisper-cli"
 
-# Download model
+# Download models
 mkdir -p "$MODELS_DIR"
-MODEL_FILE="$MODELS_DIR/ggml-base.bin"
-if [ ! -f "$MODEL_FILE" ]; then
-  echo "[3/3] Downloading ggml-base.bin model (~145MB)..."
+
+BASE_FILE="$MODELS_DIR/ggml-base.bin"
+if [ ! -f "$BASE_FILE" ]; then
+  echo "[3/4] Downloading ggml-base.bin model (~145MB)..."
   curl -L --progress-bar \
     "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin" \
-    -o "$MODEL_FILE"
+    -o "$BASE_FILE"
 else
-  echo "[3/3] Model already downloaded, skipping..."
+  echo "[3/4] ggml-base.bin already downloaded, skipping..."
+fi
+
+SMALL_FILE="$MODELS_DIR/ggml-small.bin"
+if [ ! -f "$SMALL_FILE" ]; then
+  echo "[4/4] Downloading ggml-small.bin model (~488MB)..."
+  curl -L --progress-bar \
+    "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin" \
+    -o "$SMALL_FILE"
+else
+  echo "[4/4] ggml-small.bin already downloaded, skipping..."
 fi
 
 echo ""
 echo "=== Setup complete! ==="
 echo "  Binary: $WHISPER_CPP_DIR/build/bin/whisper-cli"
-echo "  Model:  $MODEL_FILE"
+echo "  Models: $BASE_FILE"
+echo "          $SMALL_FILE"
 echo ""
 echo "Test with:"
-echo "  $WHISPER_CPP_DIR/build/bin/whisper-cli -m $MODEL_FILE -f <audio.wav>"
+echo "  $WHISPER_CPP_DIR/build/bin/whisper-cli -m $SMALL_FILE -f <audio.wav>"

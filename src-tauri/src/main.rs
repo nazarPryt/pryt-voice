@@ -22,7 +22,6 @@ struct TranslateState(Mutex<bool>);
 
 impl TranslateState {
     fn new() -> Self {
-        // Default: English output (translate = true)
         TranslateState(Mutex::new(true))
     }
     fn set(&self, translate: bool) {
@@ -33,13 +32,28 @@ impl TranslateState {
     }
 }
 
+struct ModelState(Mutex<String>);
+
+impl ModelState {
+    fn new() -> Self {
+        ModelState(Mutex::new("small".to_string()))
+    }
+    fn set(&self, model: String) {
+        *self.0.lock().unwrap() = model;
+    }
+    fn get(&self) -> String {
+        self.0.lock().unwrap().clone()
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Tauri commands
 // ---------------------------------------------------------------------------
 
 #[tauri::command]
 fn check_whisper(app: tauri::AppHandle) -> Result<CheckResult, String> {
-    Ok(check_whisper_ready(&app))
+    let model = app.state::<ModelState>().get();
+    Ok(check_whisper_ready(&app, &model))
 }
 
 #[tauri::command]
@@ -76,10 +90,11 @@ fn stop_recording(app: tauri::AppHandle) -> Result<(), String> {
     tauri::async_runtime::spawn(async move {
         let audio_state = app_clone.state::<AudioState>();
         let translate = app_clone.state::<TranslateState>().get();
+        let model = app_clone.state::<ModelState>().get();
         match audio_state.stop() {
             Ok(samples) => {
                 let _ = app_clone.emit("recording-stopped", ());
-                match whisper::transcribe(&app_clone, samples, translate) {
+                match whisper::transcribe(&app_clone, samples, translate, &model) {
                     Ok(segments) => {
                         let text = segments_to_text(&segments);
                         let _ = app_clone.emit("transcription-result", &segments);
@@ -128,6 +143,12 @@ fn set_output_language(state: tauri::State<'_, TranslateState>, translate: bool)
     state.set(translate);
 }
 
+/// Syncs the selected whisper model from the frontend ("base" or "small").
+#[tauri::command]
+fn set_model(state: tauri::State<'_, ModelState>, model: String) {
+    state.set(model);
+}
+
 #[tauri::command]
 fn register_shortcut(app: tauri::AppHandle, shortcut: String) -> Result<(), String> {
     use tauri::Emitter;
@@ -152,10 +173,11 @@ fn register_shortcut(app: tauri::AppHandle, shortcut: String) -> Result<(), Stri
                 tauri::async_runtime::spawn(async move {
                     let audio_state = app2.state::<AudioState>();
                     let translate = app2.state::<TranslateState>().get();
+                    let model = app2.state::<ModelState>().get();
                     match audio_state.stop() {
                         Ok(samples) => {
                             let _ = app2.emit("recording-stopped", ());
-                            match whisper::transcribe(&app2, samples, translate) {
+                            match whisper::transcribe(&app2, samples, translate, &model) {
                                 Ok(segments) => {
                                     let text = segments_to_text(&segments);
                                     let _ = app2.emit("transcription-result", &segments);
@@ -214,6 +236,7 @@ fn main() {
         .manage(AudioState::new())
         .manage(PasteState::new())
         .manage(TranslateState::new())
+        .manage(ModelState::new())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
@@ -226,6 +249,7 @@ fn main() {
             set_recording_device,
             set_auto_paste,
             set_output_language,
+            set_model,
         ])
         .setup(|app| {
             widget::create(app)?;

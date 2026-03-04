@@ -110,9 +110,9 @@ fn parse_output(stdout: &str) -> Vec<Segment> {
     segments
 }
 
-pub fn transcribe(app: &tauri::AppHandle, samples: Vec<f32>, translate: bool) -> Result<Vec<Segment>, String> {
+pub fn transcribe(app: &tauri::AppHandle, samples: Vec<f32>, translate: bool, model_name: &str) -> Result<Vec<Segment>, String> {
     let cli = get_whisper_cli_path(app);
-    let model = get_model_path(app);
+    let model = get_model_path(app, model_name);
 
     let wav_data = encode_wav(&samples);
 

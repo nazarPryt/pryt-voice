@@ -6,4 +6,5 @@ export const STORAGE_KEYS = {
    HISTORY: 'history',
    MAX_HISTORY: 'maxHistory',
    OUTPUT_LANGUAGE: 'outputLanguage',
+   WHISPER_MODEL: 'whisperModel',
 } as const
