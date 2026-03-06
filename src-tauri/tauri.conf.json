@@ -1,6 +1,6 @@
 {
    "productName": "Pryt-Voice",
-   "version": "2.0.0",
+   "version": "3.0.0",
    "identifier": "com.pryt.voice",
    "build": {
       "frontendDist": "../dist",

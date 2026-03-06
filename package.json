@@ -4,7 +4,7 @@
       "name": "Nazar",
       "email": "nazar@pryt-voice.local"
    },
-   "version": "2.0.0",
+   "version": "3.0.0",
    "description": "Local voice recognition app powered by whisper.cpp",
    "scripts": {
       "dev": "tauri dev",
