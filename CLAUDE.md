@@ -24,7 +24,8 @@ Version is kept in sync across three files: `package.json`, `src-tauri/tauri.con
 **Never edit these files manually.** Use the bump script instead:
 
 ```bash
-bun run version 2.1.0   # updates all three files atomically
+bun run version          # prompts for version, updates all three files atomically
+bun run version 2.1.0   # or pass version directly
 ```
 
 The script (`scripts/bump-version.ts`) validates semver format and writes the new version to all three locations. After running it, commit the three changed files together before pushing.

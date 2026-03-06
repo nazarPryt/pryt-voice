@@ -37,6 +37,12 @@ sudo ln -s ~/.cargo/bin/rustc /usr/local/bin/rustc
 sudo ln -s ~/.bun/bin/bun /usr/local/bin/bun
 ```
 
+## Versioning
+```bash
+bun run version          # Prompts interactively for new version, updates package.json + tauri.conf.json + Cargo.toml
+bun run version 2.1.0   # Pass version directly (skips prompt)
+```
+
 ## Git / Utility
 ```bash
 git status / git diff / git log

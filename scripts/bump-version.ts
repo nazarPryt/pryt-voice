@@ -1,12 +1,19 @@
 #!/usr/bin/env bun
 import { readFileSync, writeFileSync } from 'fs'
 import { dirname, resolve } from 'path'
+import { createInterface } from 'readline'
 import { fileURLToPath } from 'url'
 
-const version = process.argv[2]
+let version = process.argv[2]
 
-if (!version || !/^\d+\.\d+\.\d+$/.test(version)) {
-   console.error('Usage: bun run version <major.minor.patch>')
+if (!version) {
+   const rl = createInterface({ input: process.stdin, output: process.stdout })
+   version = await new Promise<string>(resolve => rl.question('New version (major.minor.patch): ', resolve))
+   rl.close()
+}
+
+if (!/^\d+\.\d+\.\d+$/.test(version)) {
+   console.error('Invalid version format. Expected major.minor.patch')
    process.exit(1)
 }
 

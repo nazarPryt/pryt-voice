@@ -47,7 +47,7 @@ pryt-voice/
 │       ├── OverviewTab/      # Main recorder + live transcript tab
 │       ├── HistoryTab/       # Persistent transcription history
 │       ├── ShortcutsTab/
-│       ├── SettingsTab/
+│       ├── SettingsTab/      # Settings: theme, history limit, model, output language, auto-paste
 │       └── Widget/           # Floating always-on-top window (passive, event-driven)
 ├── src-tauri/
 │   └── src/
@@ -68,15 +68,17 @@ pryt-voice/
 ```
 
 ## Data Flow
-1. User clicks record → `AudioRecorder.start()` → 16kHz AudioWorklet capture
-2. User clicks stop → worklet sends Float32Array via port message
-3. `invoke('transcribe', { audioData })` → Tauri IPC to Rust
-4. Rust: WAV temp file → spawn `whisper-cli -m <model> -f <file>` → parse stdout
-5. `Segment[]` returned → displayed; clicking block copies text via clipboard plugin
+1. User clicks record → `start_recording` Tauri command → Rust opens mic via CPAL/ALSA
+2. User clicks stop → `stop_recording` → Rust reads TranslateState + ModelState, runs whisper-cli
+3. whisper-cli flags: `-l auto` always; `--translate` added when output language = English
+4. `Segment[]` emitted as `transcription-result` event → frontend updates history + live transcript
+5. Clicking a transcript block copies text via clipboard plugin + `write_primary`
 
 ## Important Notes
 - Audio: always 16kHz mono PCM (whisper.cpp requirement)
-- whisper.cpp binary + model in `whisper/` (gitignored), created by setup script
+- whisper.cpp binary + models in `whisper/` (gitignored), created by setup script
+- Two models: `ggml-base.bin` (~145 MB, fast) and `ggml-small.bin` (~488 MB, accurate)
+- Must pass `-l auto` explicitly — whisper-cli defaults to `-l en` without it
 - Tauri IPC: snake_case Rust ↔ camelCase JS auto-mapped
 - Dev mode: `cfg!(debug_assertions)` for path switching in Rust
 - Alias: `@/` → `src/` in both Vite and Vitest configs
